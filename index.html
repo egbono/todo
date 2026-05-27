@@ -2,19 +2,36 @@
 <!--
   ============================================================
    OPPGAVER – Todo-app
-   Versjon:    2.66
-   Oppdatert:  2026-05-26
+   Versjon:    2.73
+   Oppdatert:  2026-05-27
   ============================================================
    Versjonshistorikk:
-     2.66 Eksport oppdatert:
-          - JSON-eksport inkluderer nå today_flag og
-            category-feltene (manglet fra v2.63)
-          - JSON-eksport inkluderer også slettede oppgaver
-            (state.deletedTasks) med deleted_at-tidsstempel
-          - CSV-eksport har nye kolonner: iphone_flag,
-            today_flag, category
-          - Import gjenkjenner og setter today_flag,
-            category og deleted_tasks korrekt
+     2.73 Ny "På vent"-kategori (separat flagg, grå):
+          - Knapp i kategori-raden i registreringsskjemaet
+            (etter A/B/C) med pause-ikon.
+          - Pause-ikon-knapp i oppgavelinjen (alle visninger)
+            for å toggle waitFlag direkte.
+          - Egen ramme nederst i iPhone X-fanen.
+            Hierarki: Haster > I dag > Pinnet > iPhone > A
+            > B > C > På vent.
+          - Filter-knapp i iPhone X-filter-rad og Alle-fanens
+            underflikker.
+          - Dra-og-slipp i iPhone X støtter På vent-rammen
+            (waitFlag fjernes ved flytting til andre rammer).
+          - Oppgaver med waitFlag vises litt utvasket
+            (opacity 0.75) - signaliserer at de er parkert.
+          - Dagens-fanen ekskluderer waitFlag-oppgaver.
+          - "Velg rammer" er nå 8/8.
+          - JSON og CSV-eksport/import støtter wait_flag.
+     2.72 Ny SMS-fane med maler og iPhone-Meldinger-kobling.
+     2.71 WYSIWYG-redigering i notater.
+     2.70 Større fane-knapper, popup gruppe-velger.
+     2.69 Søk i Grupper-fane, markdown-toolbar i Notat-fane,
+          tilkoblet notat i registreringsskjemaet.
+     2.68 Større fane-knapper, Grupper-fane, gruppe-søk.
+     2.67 iPhone X tre endringer (checkbox, sortering, ny
+          rekkefølge).
+     2.66 Eksport oppdatert med today_flag og category.
      2.65 iPhone X som default-fane.
      2.64 Fiks: Smart plassering av gruppe-popup.
      2.63 "I dag"-flagg integrert i hele systemet.
@@ -121,8 +138,8 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
 <meta name="application-name" content="Oppgaver" />
-<meta name="version" content="2.66" />
-<title>Oppgaver v2.66</title>
+<meta name="version" content="2.73" />
+<title>Oppgaver v2.73</title>
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23185FA5'/><g transform='translate(30 30)'><rect x='0' y='6' width='114' height='21' rx='6' fill='rgba(255,255,255,0.25)'/><rect x='0' y='39' width='90' height='21' rx='6' fill='rgba(255,255,255,0.25)'/><rect x='0' y='72' width='102' height='21' rx='6' fill='rgba(255,255,255,0.25)'/><path d='M15 16.5 L21 22.5 L33 10.5' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/><path d='M15 49.5 L21 55.5 L33 43.5' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='24' cy='82.5' r='9' fill='none' stroke='white' stroke-width='3.5'/></g></svg>" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23185FA5'/><g transform='translate(30 30)'><rect x='0' y='6' width='114' height='21' rx='6' fill='rgba(255,255,255,0.25)'/><rect x='0' y='39' width='90' height='21' rx='6' fill='rgba(255,255,255,0.25)'/><rect x='0' y='72' width='102' height='21' rx='6' fill='rgba(255,255,255,0.25)'/><path d='M15 16.5 L21 22.5 L33 10.5' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/><path d='M15 49.5 L21 55.5 L33 43.5' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='24' cy='82.5' r='9' fill='none' stroke='white' stroke-width='3.5'/></g></svg>" />
 <style>
@@ -168,15 +185,22 @@ button{font-family:inherit;color:inherit}
 .app-title{font-size:18px;font-weight:600;margin:0;display:flex;align-items:baseline;gap:6px}
 .app-version{font-size:9px;color:var(--text-tertiary);font-weight:500;background:var(--bg-secondary);padding:1px 5px;border-radius:4px;letter-spacing:0.3px}
 .app-counter{font-size:11px;color:var(--text-tertiary)}
-.tabs{display:flex;gap:1px;padding:3px 6px;border-bottom:0.5px solid var(--border-tertiary);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.tabs{display:flex;gap:3px;padding:5px 8px;border-bottom:0.5px solid var(--border-tertiary);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:48px;padding:7px 2px;font-size:11px;text-align:center;border-radius:6px;cursor:pointer;color:var(--text-secondary);border:none;background:transparent;white-space:nowrap}
+.tab{flex:1;min-width:56px;min-height:38px;padding:8px 4px;font-size:12px;text-align:center;border-radius:7px;cursor:pointer;color:var(--text-secondary);border:none;background:transparent;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:4px}
 .tab.active{background:var(--bg-secondary);color:var(--text-primary);font-weight:600}
-.tab-dropdown{flex:1;min-width:48px;display:flex}
-.tab-with-menu{display:flex;align-items:center;justify-content:center;gap:3px;width:100%}
-.tab-chevron{display:inline-flex;align-items:center;justify-content:center;opacity:0.6;padding:0 2px}
-.tab-chevron .icon{width:10px;height:10px}
-.tab-chevron:hover{opacity:1}
+.tab-dropdown{flex:1;min-width:56px;display:flex}
+.tab-with-menu{display:flex;align-items:center;justify-content:center;gap:4px;width:100%}
+.tab-chevron{display:inline-flex;align-items:center;justify-content:center;padding:3px 5px;background:rgba(255,255,255,0.06);border-radius:4px;margin-left:1px;min-width:20px;min-height:20px}
+.tab.active .tab-chevron{background:rgba(255,255,255,0.12)}
+.tab-chevron .icon{width:11px;height:11px}
+.tab-chevron:hover{background:rgba(255,255,255,0.15)}
+.tab-chevron:active{transform:scale(0.92)}
+@media (prefers-color-scheme: light){
+  .tab-chevron{background:rgba(0,0,0,0.06)}
+  .tab.active .tab-chevron{background:rgba(0,0,0,0.1)}
+  .tab-chevron:hover{background:rgba(0,0,0,0.12)}
+}
 .tab-menu{background:var(--bg-primary);border:0.5px solid var(--border-secondary);border-radius:8px;padding:4px;box-shadow:0 6px 16px rgba(0,0,0,0.4);min-width:120px}
 .tab-menu-item{display:block;width:100%;text-align:left;padding:7px 14px;font-size:12px;color:var(--text-primary);background:transparent;border:none;border-radius:5px;cursor:pointer;font-family:inherit}
 .tab-menu-item:hover{background:var(--bg-secondary)}
@@ -374,6 +398,8 @@ button{font-family:inherit;color:inherit}
 .icon-btn.iphone-active:active{color:#5298D2}
 .icon-btn.today-active{color:#5DDFF1}
 .icon-btn.today-active:active{color:#3FBCD4}
+.icon-btn.wait-active{color:#D3D1C7}
+.icon-btn.wait-active:active{color:#A8A69E}
 .pinned-badge{display:inline-flex;align-items:center;gap:3px;color:#EF9F27;font-size:10px;font-weight:600}
 .task-www{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-info);text-decoration:none;margin-top:3px}
 .task-www:hover{text-decoration:underline}
@@ -505,7 +531,9 @@ mark{background:#FAEEDA;color:inherit;padding:0 2px;border-radius:2px}
 .form-iphone-btn.active{color:#85B7EB;border-color:#378ADD;background:rgba(55,138,221,0.1)}
 .form-task-number{font-size:12px;color:var(--text-tertiary);font-family:ui-monospace,Menlo,monospace;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);padding:6px 9px;border-radius:5px;line-height:1;flex-shrink:0}
 .form-category-row{background:rgba(55,138,221,0.05);padding:6px 11px;border-bottom:0.5px solid rgba(55,138,221,0.3);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.form-tabs{display:flex;gap:3px;align-items:center;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+.form-tabs{display:flex;gap:3px;align-items:center;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.form-tabs::-webkit-scrollbar{display:none}
+.form-tab{flex-shrink:0}
 .form-tab{background:transparent;border:0.5px solid var(--border-tertiary);color:var(--text-tertiary);font-size:10px;padding:5px 9px;border-radius:5px;font-weight:500;cursor:pointer;font-family:inherit;line-height:1;display:flex;align-items:center;gap:3px;flex-shrink:0}
 .form-tab .icon{width:11px;height:11px}
 .form-tab:active{opacity:0.7}
@@ -521,6 +549,9 @@ mark{background:#FAEEDA;color:inherit;padding:0 2px;border-radius:2px}
 .cat-btn.cat-today{display:inline-flex;align-items:center;gap:3px}
 .cat-btn.cat-today .icon{width:10px;height:10px}
 .cat-btn.cat-today.active{background:rgba(0,180,219,0.18);border-color:#00B4DB;color:#5DDFF1}
+.cat-btn.cat-wait{display:inline-flex;align-items:center;gap:3px}
+.cat-btn.cat-wait .icon{width:10px;height:10px}
+.cat-btn.cat-wait.active{background:rgba(136,135,128,0.22);border-color:#888780;color:#D3D1C7}
 .cat-btn.cat-pinned.active{background:rgba(239,159,39,0.18);border-color:#EF9F27;color:#FAC775}
 .cat-btn.cat-iphone.active{background:rgba(55,138,221,0.18);border-color:#378ADD;color:#85B7EB}
 @media (prefers-color-scheme: light){
@@ -542,8 +573,175 @@ mark{background:#FAEEDA;color:inherit;padding:0 2px;border-radius:2px}
 .iphone-section-body .task{margin:2px 8px;border-radius:4px;border-bottom:none}
 .iphonex-body{padding:5px 0}
 .iphonex-grip{background:transparent;border:none;color:var(--text-tertiary);padding:0 4px 0 0;cursor:grab;display:inline-flex;align-items:center;touch-action:none;flex-shrink:0}
+.iphonex-check{width:16px;height:16px;border:1.5px solid var(--text-tertiary);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;transition:all 0.15s}
+.iphonex-check .icon{width:10px;height:10px;color:#000}
+.iphonex-check:active{transform:scale(0.9)}
+.iphonex-check.checked{background:currentColor}
+.iphonex-body-urgent .iphonex-check{color:#FF8080}
+.iphonex-body-today .iphonex-check{color:#5DDFF1}
+.iphonex-body-pinned .iphonex-check{color:#FAC775}
+.iphonex-body-a .iphonex-check{color:#FAC775}
+.iphonex-body-b .iphonex-check{color:#AED183}
+.iphonex-body-c .iphonex-check{color:#B5AEF0}
+.iphonex-body-wait .iphonex-check{color:#D3D1C7}
+.iphonex-section .iphone-section .iphonex-check{color:#85B7EB}
+.iphonex-row.done{opacity:0.55}
+.iphonex-row.done .iphonex-title{text-decoration:line-through}
 .alle-group-controls{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.group-mgmt-section{border:1px solid var(--border-secondary);border-radius:8px;overflow:hidden;margin:8px}
+.group-mgmt-header{padding:9px 12px;display:flex;align-items:center;gap:6px}
+.group-mgmt-header .icon{width:13px;height:13px;flex-shrink:0}
+.group-mgmt-title{flex:1;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.group-mgmt-section-count{font-size:10px;background:rgba(0,0,0,0.3);padding:2px 7px;border-radius:6px;font-weight:600}
+.group-mgmt-new-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:5px 9px;border-radius:5px;cursor:pointer;font-family:inherit;min-height:28px}
+.group-mgmt-new-btn .icon{width:10px;height:10px}
+.group-mgmt-body{padding:5px}
+.group-mgmt-row{display:flex;align-items:center;gap:8px;padding:9px 11px;margin:2px 0;background:var(--bg-secondary);border-radius:5px;font-size:12px;min-height:36px}
+.group-mgmt-grip{background:transparent;border:none;color:var(--text-tertiary);padding:0 3px;cursor:grab;display:inline-flex;align-items:center;touch-action:none;flex-shrink:0}
+.group-mgmt-grip:active{cursor:grabbing}
+.group-mgmt-grip .icon{width:13px;height:13px}
+.group-mgmt-color{width:12px;height:12px;border-radius:50%;flex-shrink:0;display:inline-block}
+.group-mgmt-name{flex:1;color:var(--text-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.group-mgmt-count{font-size:10px;color:var(--text-tertiary);white-space:nowrap;flex-shrink:0}
+.group-mgmt-action{background:transparent;border:none;color:var(--text-tertiary);padding:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;min-width:28px;min-height:28px}
+.group-mgmt-action:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+.group-mgmt-action .icon{width:13px;height:13px}
+.group-mgmt-row.sort-dragging{opacity:0.35}
+.group-mgmt-row.sort-target-above{box-shadow:inset 0 2px 0 0 #85B7EB}
+.group-mgmt-row.sort-target-below{box-shadow:inset 0 -2px 0 0 #85B7EB}
+.color-palette{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+.color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;transition:transform 0.1s}
+.color-swatch:hover{transform:scale(1.1)}
+.color-swatch.active{border-color:var(--text-primary);box-shadow:0 0 0 1px var(--bg-primary) inset}
+.group-mgmt-search{display:flex;align-items:center;gap:6px;padding:6px 11px;background:var(--bg-primary);border-bottom:0.5px solid var(--border-tertiary)}
+.group-mgmt-search .icon{width:11px;height:11px;color:var(--text-tertiary);flex-shrink:0}
+.group-mgmt-search-input{flex:1;min-width:0;background:transparent;border:none;color:var(--text-primary);font-size:12px;font-family:inherit;padding:3px 0;outline:none}
+.group-mgmt-search-input::placeholder{color:var(--text-tertiary)}
+.group-mgmt-search-clear{background:transparent;border:none;color:var(--text-tertiary);padding:3px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:3px}
+.group-mgmt-search-clear:hover{background:var(--bg-secondary)}
+.group-mgmt-search-clear .icon{width:11px;height:11px}
+.rich-editor-wrap{margin-bottom:8px}
+.rich-editor{min-height:120px;padding:10px 12px;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-top:none;border-radius:0 0 6px 6px;font-size:13px;line-height:1.5;color:var(--text-primary);outline:none;overflow-y:auto;font-family:inherit}
+.rich-editor:focus{border-color:var(--border-info)}
+.rich-editor.rich-editor-empty::before{content:attr(data-placeholder);color:var(--text-tertiary);pointer-events:none;font-style:italic}
+.rich-editor p{margin:4px 0}
+.rich-editor h1{font-size:18px;font-weight:700;margin:8px 0 4px}
+.rich-editor h2{font-size:16px;font-weight:700;margin:7px 0 4px}
+.rich-editor h3{font-size:14px;font-weight:600;margin:5px 0 3px}
+.rich-editor strong{font-weight:700}
+.rich-editor em{font-style:italic}
+.rich-editor del,.rich-editor s,.rich-editor strike{text-decoration:line-through;color:var(--text-tertiary)}
+.rich-editor code{background:var(--bg-tertiary);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:0.9em;color:var(--text-info)}
+.rich-editor ul,.rich-editor ol{margin:4px 0;padding-left:22px}
+.rich-editor li{margin:2px 0}
+.rich-editor li input[type=checkbox]{margin-right:5px}
+.rich-editor blockquote{border-left:3px solid var(--border-info);padding:3px 10px;margin:5px 0;color:var(--text-secondary);background:var(--bg-tertiary);border-radius:3px}
+.rich-editor a{color:var(--text-info);text-decoration:underline}
+.md-btn.active{background:var(--bg-info);color:var(--text-info);border-color:var(--border-info)}
+
+.linked-note-inline{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(99,153,34,0.08);border:0.5px solid rgba(99,153,34,0.5);border-left:3px solid #639922;border-radius:5px;cursor:pointer;margin-top:8px}
+.linked-note-inline:hover{background:rgba(99,153,34,0.14)}
+.linked-note-inline .icon{width:14px;height:14px;color:#AED183;flex-shrink:0}
+.linked-note-inline-label{font-size:9px;color:#AED183;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+.linked-note-inline-title{font-size:12px;color:var(--text-primary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linked-note-inline-btn{background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);color:var(--text-primary);font-size:10px;padding:5px 9px;border-radius:4px;cursor:pointer;font-family:inherit;flex-shrink:0;min-height:28px;display:inline-flex;align-items:center;justify-content:center}
+.linked-note-inline-btn:hover{background:var(--bg-tertiary)}
+.linked-note-inline-btn .icon{width:11px;height:11px}
+
+.linked-note-inline-empty{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;background:var(--bg-secondary);border:0.5px dashed var(--border-tertiary);border-radius:5px;cursor:pointer;color:var(--text-tertiary);font-size:12px;font-family:inherit;margin-top:8px;text-align:left}
+.linked-note-inline-empty:hover{background:var(--bg-tertiary);border-color:var(--border-info);color:var(--text-primary)}
+.linked-note-inline-empty .icon{width:14px;height:14px;flex-shrink:0}
+.linked-note-inline-empty span{flex:1}
+
+/* SMS-fanen */
+.sms-toolbar{display:flex;gap:6px;align-items:center;padding:8px 8px;background:transparent;margin-bottom:4px}
+.sms-toolbar .group-search-row{margin:0}
+.sms-draft-card{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;margin:4px 8px;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-left:3px solid #00B4DB;border-radius:6px;cursor:pointer}
+.sms-draft-card:hover{background:var(--bg-tertiary)}
+.sms-draft-card.sent{opacity:0.7;border-left-color:#5DCAA5}
+.sms-draft-main{flex:1;min-width:0}
+.sms-draft-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.sms-draft-name{display:inline-flex;align-items:center;gap:3px;color:#5DDFF1;font-size:12px;font-weight:600}
+.sms-draft-name .icon{width:11px;height:11px}
+.sms-draft-phone{font-size:10px;color:var(--text-tertiary);font-family:monospace}
+.sms-draft-body{font-size:11px;color:var(--text-secondary);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;word-break:break-word}
+.sms-draft-meta{font-size:9px;color:var(--text-tertiary);margin-top:5px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sms-task-link{display:inline-flex;align-items:center;gap:3px;color:#85B7EB}
+.sms-task-link .icon{width:9px;height:9px}
+.sms-sent-badge{font-size:9px;color:#5DCAA5;background:rgba(93,202,165,0.12);padding:1px 6px;border-radius:6px;font-weight:600}
+.sms-char-count{font-size:10px;color:var(--text-tertiary)}
+.sms-char-count.warn{color:#FAC775}
+.sms-char-count.over{color:#FF8080;font-weight:600}
+.sms-draft-actions{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.sms-action-btn{background:var(--bg-tertiary);border:0.5px solid var(--border-tertiary);color:var(--text-primary);font-size:10px;padding:5px 9px;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-family:inherit;min-height:30px;min-width:30px;justify-content:center}
+.sms-action-btn:hover{background:var(--bg-secondary)}
+.sms-action-btn.primary{background:rgba(0,180,219,0.18);border-color:#00B4DB;color:#5DDFF1}
+.sms-action-btn.primary:hover{background:rgba(0,180,219,0.28)}
+.sms-action-btn.small{padding:5px}
+.sms-action-btn .icon{width:11px;height:11px}
+.sms-action-btn span{font-size:10px}
+.sms-tpl-row{display:flex;flex-wrap:wrap;gap:5px}
+.sms-tpl-btn{background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);color:var(--text-primary);font-size:11px;padding:6px 10px;border-radius:4px;cursor:pointer;font-family:inherit;min-height:30px}
+.sms-tpl-btn:hover{background:var(--bg-tertiary);border-color:var(--border-info)}
+.md-toolbar{display:flex;flex-wrap:wrap;gap:3px;padding:6px 6px;background:var(--bg-primary);border:0.5px solid var(--border-tertiary);border-bottom:none;border-radius:6px 6px 0 0;margin-bottom:0}
+.md-toolbar-compact{padding:4px 5px;gap:2px}
+.md-toolbar-compact .md-btn{min-height:26px;min-width:28px;font-size:10px;padding:3px 7px}
+.md-toolbar + textarea{border-top-left-radius:0;border-top-right-radius:0;margin-top:0}
+.md-btn{background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);color:var(--text-primary);font-size:11px;padding:0 8px;border-radius:4px;cursor:pointer;font-family:inherit;min-height:30px;min-width:32px;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.md-btn:hover{background:var(--bg-tertiary)}
+.md-btn:active{transform:scale(0.95)}
+.md-btn .icon{width:13px;height:13px}
+.md-btn.md-preview-btn.active{background:var(--bg-info);color:var(--text-info);border-color:var(--border-info)}
+.md-sep{width:1px;background:var(--border-tertiary);margin:3px 3px}
+.md-preview{padding:12px 14px;background:var(--bg-primary);border:0.5px solid var(--border-tertiary);border-radius:6px;min-height:200px;font-size:13px;line-height:1.55;color:var(--text-primary);overflow:auto}
+.md-preview h1{font-size:18px;margin:8px 0 6px;font-weight:700;border-bottom:0.5px solid var(--border-tertiary);padding-bottom:4px}
+.md-preview h2{font-size:16px;margin:8px 0 6px;font-weight:700}
+.md-preview h3{font-size:14px;margin:6px 0 4px;font-weight:600}
+.md-preview p{margin:6px 0}
+.md-preview ul, .md-preview ol{margin:6px 0;padding-left:22px}
+.md-preview li{margin:2px 0}
+.md-preview blockquote{border-left:3px solid var(--border-info);padding:4px 10px;margin:6px 0;color:var(--text-secondary);background:var(--bg-secondary);border-radius:3px}
+.md-preview code{background:var(--bg-secondary);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:0.9em;color:var(--text-info)}
+.md-preview pre{background:var(--bg-secondary);padding:8px 10px;border-radius:5px;overflow-x:auto;margin:6px 0}
+.md-preview pre code{background:none;padding:0}
+.md-preview a{color:var(--text-info);text-decoration:underline}
+.md-preview hr{border:none;border-top:0.5px solid var(--border-tertiary);margin:10px 0}
+.md-preview .task-item{display:flex;align-items:flex-start;gap:6px;margin:2px 0}
+.md-preview .task-item input{margin-top:3px}
+.md-preview strong{font-weight:700}
+.md-preview em{font-style:italic}
+.md-preview del{text-decoration:line-through;color:var(--text-tertiary)}
+.linked-note-card{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-secondary);border-left:3px solid #639922;border-radius:5px;cursor:pointer}
+.linked-note-card:hover{background:var(--bg-tertiary)}
+.linked-note-title{font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linked-note-desc{font-size:10px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linked-note-empty{display:flex;flex-direction:column;gap:8px}
+.linked-note-empty .group-search-row input{flex:1;border:none;background:transparent;outline:none;font-size:12px;color:var(--text-primary);padding:4px 0;font-family:inherit;height:auto;width:100%}
+.linked-note-empty .group-search-row input::placeholder{color:var(--text-tertiary)}
+.linked-note-results{display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto}
+.linked-note-result{padding:7px 10px;background:var(--bg-secondary);border-radius:4px;cursor:pointer;border-left:2px solid #5DCAA5}
+.linked-note-result:hover{background:var(--bg-tertiary)}
+.linked-note-empty-msg{padding:10px;text-align:center;color:var(--text-tertiary);font-size:11px;font-style:italic}
+.form-group-picker{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-left:3px solid var(--border-tertiary);border-radius:5px;padding:8px 10px;color:var(--text-primary);font-size:12px;font-family:inherit;cursor:pointer;text-align:left;min-height:36px}
+.form-group-picker:hover{background:var(--bg-tertiary)}
+.form-group-picker.active{font-weight:600}
+.form-group-picker .icon{width:11px;height:11px;opacity:0.6;flex-shrink:0}
+.form-group-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.form-group-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.group-picker-item{display:flex;align-items:center;gap:7px;padding:8px 10px;margin:2px 0;background:var(--bg-secondary);border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;color:var(--text-primary);width:100%;text-align:left}
+.group-picker-item:hover{background:var(--bg-tertiary)}
+.group-picker-item.active{font-weight:600}
+.group-picker-item .group-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.group-picker-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.group-picker-name mark{background:rgba(255,235,59,0.4);color:inherit;padding:0 1px;border-radius:2px}
+.group-picker-check{color:var(--text-info);flex-shrink:0;font-weight:700}
+.group-picker-none{color:var(--text-tertiary);font-style:italic}
+.group-picker-create{display:flex;align-items:center;gap:5px;padding:7px 10px;margin:6px 0 2px;background:var(--bg-info);color:var(--text-info);border:0.5px dashed var(--border-info);border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;width:100%;text-align:left}
+.group-picker-create:hover{background:var(--bg-tertiary)}
+.group-picker-create .icon{width:11px;height:11px}
+.group-picker-list{max-height:240px;overflow-y:auto;padding:0 4px}
+.group-picker-count{font-size:10px;color:var(--text-tertiary);padding:4px 10px;text-align:center}
 .modal-content{background:var(--bg-primary);border:0.5px solid var(--border-secondary);border-radius:12px;width:100%;max-width:340px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.5)}
 .modal-header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:0.5px solid var(--border-tertiary)}
 .modal-header .icon{width:14px;height:14px;color:var(--text-info);flex-shrink:0}
@@ -588,6 +786,8 @@ mark{background:#FAEEDA;color:inherit;padding:0 2px;border-radius:2px}
 .iphonex-grip:active{cursor:grabbing}
 .iphonex-grip.dragging{color:var(--text-primary)}
 .iphonex-row.sort-dragging{opacity:0.35}
+.iphonex-row.sort-target-above{box-shadow:inset 0 2px 0 0 #85B7EB}
+.iphonex-row.sort-target-below{box-shadow:inset 0 -2px 0 0 #85B7EB}
 [data-section-target].section-drop-target{background:rgba(85,183,235,0.12) !important;box-shadow:inset 0 0 0 2px #85B7EB}
 .iphonex-body-pinned .iphonex-row{border-bottom:0.5px solid rgba(239,159,39,0.15)}
 .iphonex-body-pinned .iphonex-row:active{background:rgba(239,159,39,0.08)}
@@ -601,8 +801,7 @@ mark{background:#FAEEDA;color:inherit;padding:0 2px;border-radius:2px}
 /* Haster-seksjon */
 .urgent-section{background:rgba(226,75,74,0.08);border:1px solid #E24B4A;border-radius:8px;overflow:hidden;margin-bottom:12px}
 .urgent-section-header{background:rgba(226,75,74,0.18);padding:7px 11px;border-bottom:1px solid #E24B4A;display:flex;align-items:center;gap:6px;cursor:pointer}
-.today-section{background:rgba(0,180,219,0.06);border:1px solid #00B4DB;border-radius:8px;overflow:hidden;margin-bottom:12px}
-.today-section-header{background:rgba(0,180,219,0.18);padding:7px 11px;border-bottom:1px solid #00B4DB;display:flex;align-items:center;gap:6px;cursor:pointer}
+.today-section{background:rgba(0,180,219,0.06);border:1px solid #00B4DB;border-radius:8px;overflow:hidden;margin-bottom:12px}.today-section-header{background:rgba(0,180,219,0.18);padding:7px 11px;border-bottom:1px solid #00B4DB;display:flex;align-items:center;gap:6px;cursor:pointer}
 .today-section-header .icon{width:13px;height:13px;color:#5DDFF1;flex-shrink:0}
 .today-section-title{flex:1;font-size:11px;font-weight:700;color:#5DDFF1;letter-spacing:0.5px;text-transform:uppercase}
 .today-section-count{font-size:10px;color:#5DDFF1;background:rgba(0,0,0,0.3);padding:1px 6px;border-radius:6px;font-weight:600}
@@ -612,6 +811,17 @@ mark{background:#FAEEDA;color:inherit;padding:0 2px;border-radius:2px}
 .iphonex-body-today .iphonex-row{border-bottom:0.5px solid rgba(0,180,219,0.15)}
 .iphonex-body-today .iphonex-row:active{background:rgba(0,180,219,0.1)}
 .iphonex-body-today .iphonex-row:hover{background:rgba(0,180,219,0.06)}
+.wait-section{background:rgba(136,135,128,0.06);border:1px solid #888780;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.wait-section-header{background:rgba(136,135,128,0.22);padding:7px 11px;border-bottom:1px solid #888780;display:flex;align-items:center;gap:6px;cursor:pointer}
+.wait-section-header .icon{width:13px;height:13px;color:#D3D1C7;flex-shrink:0}
+.wait-section-title{flex:1;font-size:11px;font-weight:700;color:#D3D1C7;letter-spacing:0.5px;text-transform:uppercase}
+.wait-section-count{font-size:10px;color:#D3D1C7;background:rgba(0,0,0,0.3);padding:1px 6px;border-radius:6px;font-weight:600}
+.wait-section.collapsed .wait-section-header{border-bottom:none}
+.wait-section.collapsed .wait-section-body{display:none}
+.wait-section.collapsed .section-collapse-toggle{transform:rotate(-90deg)}
+.iphonex-body-wait .iphonex-row{border-bottom:0.5px solid rgba(136,135,128,0.15);opacity:0.75}
+.iphonex-body-wait .iphonex-row:active{background:rgba(136,135,128,0.1);opacity:0.9}
+.iphonex-body-wait .iphonex-row:hover{background:rgba(136,135,128,0.08);opacity:0.9}
 .urgent-section.collapsed .urgent-section-header{border-bottom:none}
 .urgent-section.collapsed .urgent-section-body{display:none}
 .urgent-section.collapsed .section-collapse-toggle{transform:rotate(-90deg)}
@@ -794,6 +1004,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
     </button>
   </div>
   <button class="tab" data-view="notes">Notat</button>
+  <button class="tab" data-view="sms">SMS</button>
+  <button class="tab" data-view="groups">Grupper</button>
 </div>
 
 <div class="search-bar" id="search-bar">
@@ -813,7 +1025,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
 <script>
 (function(){
 const STORAGE_KEY = 'todoapp_v1';
-const APP_VERSION = '2.66';
+const APP_VERSION = '2.73';
 
 const ICONS = {
   check:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 10 17 19 8"/></svg>',
@@ -853,7 +1065,12 @@ const ICONS = {
   folder:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
   phone:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>',
   warning:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 21h22L12 2zm0 5l8 14H4l8-14zm-1 4v5h2v-5h-2zm0 6v2h2v-2h-2z"/></svg>',
+  tag:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  list:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>',
+  message:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+  send:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
   sun:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="6.93" y2="6.93"/><line x1="17.07" y1="17.07" x2="19.07" y2="19.07"/><line x1="4.93" y1="19.07" x2="6.93" y2="17.07"/><line x1="17.07" y1="6.93" x2="19.07" y2="4.93"/></svg>',
+  pause:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
   minus:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
 };
 
@@ -957,6 +1174,7 @@ const DEFAULT_STATE = {
   dividersIphoneXIphone: [],
   dividersIphoneXUrgent: [],
   dividersIphoneXToday: [],
+  dividersIphoneXWait: [],
   dividersIphoneXA: [],
   dividersIphoneXB: [],
   dividersIphoneXC: [],
@@ -973,8 +1191,16 @@ const DEFAULT_STATE = {
   tasks: [],
   deletedTasks: [],
   notes: [],
-  form: { title:'', notes:'', subtasks:[], priority:'med', date: todayISO(), futureDate:'', group1Id:'', group2Id:'', www:'', contact:'', images:[], pinned:false, iphoneFlag:false, todayFlag:false, category:'none', editingId:null, mode:'notes' },
-  noteForm: { title:'', description:'', body:'', date: todayISO(), editingId:null }
+  smsDrafts: [],
+  smsTemplates: [
+    {id:'tpl-meeting', name:'📅 Møte-påminnelse', body:'Hei! Bare en påminnelse om møtet vårt. Sees!'},
+    {id:'tpl-thanks', name:'🙏 Takk', body:'Tusen takk for hjelpen, det settes stor pris på!'},
+    {id:'tpl-onway', name:'⏰ Er på vei', body:'Er på vei, kommer om ca. 10 min.'},
+    {id:'tpl-callback', name:'📞 Ring meg', body:'Hei, kan du ringe meg når du har anledning?'}
+  ],
+  form: { title:'', notes:'', subtasks:[], priority:'med', date: todayISO(), futureDate:'', group1Id:'', group2Id:'', www:'', contact:'', images:[], pinned:false, iphoneFlag:false, todayFlag:false, waitFlag:false, category:'none', noteId:'', editingId:null, mode:'notes' },
+  noteForm: { title:'', description:'', body:'', date: todayISO(), editingId:null },
+  smsForm: { name:'', phone:'', body:'', taskId:'', editingId:null }
 };
 
 function migrateState(s){
@@ -986,6 +1212,9 @@ function migrateState(s){
   if(!s.groups1) s.groups1 = JSON.parse(JSON.stringify(DEFAULT_STATE.groups1));
   if(!s.groups2) s.groups2 = JSON.parse(JSON.stringify(DEFAULT_STATE.groups2));
   if(!Array.isArray(s.deletedTasks)) s.deletedTasks = [];
+  if(!Array.isArray(s.smsDrafts)) s.smsDrafts = [];
+  if(!Array.isArray(s.smsTemplates)) s.smsTemplates = JSON.parse(JSON.stringify(DEFAULT_STATE.smsTemplates));
+  if(!s.smsForm) s.smsForm = { name:'', phone:'', body:'', taskId:'', editingId:null };
   if(s.tasks) s.tasks.forEach(t=>{
     if(t.groupId !== undefined && t.group1Id === undefined){
       t.group1Id = t.groupId;
@@ -999,6 +1228,8 @@ function migrateState(s){
     if(typeof t.pinned !== 'boolean') t.pinned = false;
     if(typeof t.iphoneFlag !== 'boolean') t.iphoneFlag = false;
     if(typeof t.todayFlag !== 'boolean') t.todayFlag = false;
+    if(typeof t.waitFlag !== 'boolean') t.waitFlag = false;
+    if(typeof t.noteId !== 'string') t.noteId = '';
     if(!['none','urgent','a','b','c'].includes(t.category)) t.category = 'none';
     if(typeof t.order !== 'number') t.order = 0;
     if(!Array.isArray(t.images)) t.images = [];
@@ -1021,8 +1252,8 @@ function migrateState(s){
   if(s.iphoneOnlyFlagged === true) s.iphoneListFilter = 'iphone';
   if(typeof s.iphoneOnlyFlagged === 'boolean') delete s.iphoneOnlyFlagged;
   if(!['all','pinned','iphone'].includes(s.iphoneListFilter)) s.iphoneListFilter = 'all';
-  if(!['all','urgent','today','a','b','c','pinned','iphone'].includes(s.iphoneXFilter)) s.iphoneXFilter = 'all';
-  if(!['prioritert','linje','group1','group2','urgent','today','a','b','c','pinned','iphone'].includes(s.alleFilter)) s.alleFilter = 'prioritert';
+  if(!['all','urgent','today','a','b','c','pinned','iphone','wait'].includes(s.iphoneXFilter)) s.iphoneXFilter = 'all';
+  if(!['prioritert','linje','group1','group2','urgent','today','a','b','c','pinned','iphone','wait'].includes(s.alleFilter)) s.alleFilter = 'prioritert';
   if(!Array.isArray(s.alleGroup1Hidden)) s.alleGroup1Hidden = [];
   if(!Array.isArray(s.alleGroup2Hidden)) s.alleGroup2Hidden = [];
   if(!Array.isArray(s.iphoneXHidden)) s.iphoneXHidden = [];
@@ -1044,6 +1275,7 @@ function migrateState(s){
   if(!Array.isArray(s.dividersIphoneXIphone)) s.dividersIphoneXIphone = [];
   if(!Array.isArray(s.dividersIphoneXUrgent)) s.dividersIphoneXUrgent = [];
   if(!Array.isArray(s.dividersIphoneXToday)) s.dividersIphoneXToday = [];
+  if(!Array.isArray(s.dividersIphoneXWait)) s.dividersIphoneXWait = [];
   if(!Array.isArray(s.dividersIphoneXA)) s.dividersIphoneXA = [];
   if(!Array.isArray(s.dividersIphoneXB)) s.dividersIphoneXB = [];
   if(!Array.isArray(s.dividersIphoneXC)) s.dividersIphoneXC = [];
@@ -1547,6 +1779,7 @@ function render(){
       <button class="toggle-btn ${af==='c'?'active':''}" data-alle-filter="c" style="${af==='c'?'background:rgba(127,119,221,0.18);color:#B5AEF0;border-color:#7F77DD':''}">C</button>
       <button class="toggle-btn ${af==='pinned'?'active':''}" data-alle-filter="pinned" style="${af==='pinned'?'background:rgba(239,159,39,0.18);color:#FAC775;border-color:#EF9F27':''}">${ICONS.star} Pinnet</button>
       <button class="toggle-btn ${af==='iphone'?'active':''}" data-alle-filter="iphone" style="${af==='iphone'?'background:var(--bg-info);color:var(--text-info);border-color:var(--border-info)':''}">${ICONS.phone} iPhone</button>
+      <button class="toggle-btn ${af==='wait'?'active':''}" data-alle-filter="wait" style="${af==='wait'?'background:rgba(136,135,128,0.22);color:#D3D1C7;border-color:#888780':''}">${ICONS.pause} På vent</button>
     </div>
     ${filterStatusHTML}`;
     fb.querySelectorAll('[data-alle-filter]').forEach(b=>b.addEventListener('click',()=>{
@@ -1569,6 +1802,8 @@ function render(){
   else if(state.view==='done') c.innerHTML = renderDone();
   else if(state.view==='deleted') c.innerHTML = renderDeleted();
   else if(state.view==='notes') c.innerHTML = renderNotes();
+  else if(state.view==='groups') c.innerHTML = renderGroups();
+  else if(state.view==='sms') c.innerHTML = renderSms();
   else if(state.view==='noteForm') c.innerHTML = renderNoteForm();
   else c.innerHTML = renderForm();
 
@@ -1580,6 +1815,8 @@ function render(){
   if(state.view==='deleted') wireDeletedActions();
   if(state.view==='form') wireForm();
   if(state.view==='notes') wireNotes();
+  if(state.view==='groups') wireGroups();
+  if(state.view==='sms') wireSms();
   if(state.view==='noteForm') wireNoteForm();
   wireDropZones();
 }
@@ -1603,7 +1840,7 @@ function renderFab(){
     document.getElementById('btn-new-quick').addEventListener('click',()=>{
       state.returnView = state.view;
       state.view='form';
-      state.form={title:'',notes:'',subtasks:[],priority:'med',date:todayISO(),futureDate:'',group1Id:'',group2Id:'',www:'',contact:'',images:[],pinned:false,iphoneFlag:false,todayFlag:false,category:'none',activeTab:'title',editingId:null,mode:'notes'};
+      state.form={title:'',notes:'',subtasks:[],priority:'med',date:todayISO(),futureDate:'',group1Id:'',group2Id:'',www:'',contact:'',images:[],pinned:false,iphoneFlag:false,todayFlag:false,category:'none',waitFlag:false,noteId:'',activeTab:'title',editingId:null,mode:'notes'};
       save(); render();
     });
   }
@@ -1669,6 +1906,7 @@ function taskHTML(t, opts={}){
   const pinBtn = opts.doneView ? '' : `<button class="icon-btn ${t.pinned?'pinned':''}" data-pin="${t.id}" aria-label="${t.pinned?'Fjern fra dagens':'Pin til dagens'}">${t.pinned?ICONS.starFilled:ICONS.star}</button>`;
   const iphoneBtn = opts.doneView ? '' : `<button class="icon-btn ${t.iphoneFlag?'iphone-active':''}" data-toggle-iphone="${t.id}" aria-label="${t.iphoneFlag?'Fjern fra iPhone':'Legg til iPhone'}">${ICONS.phone}</button>`;
   const todayBtn = opts.doneView ? '' : `<button class="icon-btn ${t.todayFlag?'today-active':''}" data-toggle-today="${t.id}" aria-label="${t.todayFlag?'Fjern I dag-merket':'Merk for I dag'}">${ICONS.sun}</button>`;
+  const waitBtn = opts.doneView ? '' : `<button class="icon-btn ${t.waitFlag?'wait-active':''}" data-toggle-wait="${t.id}" aria-label="${t.waitFlag?'Fjern På vent-merket':'Sett på vent'}">${ICONS.pause}</button>`;
   const gripHandle = opts.showMove ? `<button class="task-grip" data-grip="${t.id}" aria-label="Dra for å flytte">${ICONS.grip}</button>` : '';
   const actions = opts.doneView
     ? `<div class="task-actions">
@@ -1679,6 +1917,7 @@ function taskHTML(t, opts={}){
          ${todayBtn}
          ${pinBtn}
          ${iphoneBtn}
+         ${waitBtn}
          <button class="icon-btn" data-copy="${t.id}" aria-label="Kopier">${ICONS.copy}</button>
          <button class="icon-btn" data-edit="${t.id}" aria-label="Rediger">${ICONS.edit}</button>
          <button class="icon-btn" data-del="${t.id}" aria-label="Slett">${ICONS.trash}</button>
@@ -1992,14 +2231,14 @@ function renderDagens(){
   let list;
   if(tv === 'list'){
     if(dagensListFilter === 'pinned'){
-      list = state.tasks.filter(t=>(t.pinned || t.todayFlag) && !t.done && matchesSearch(t) && passesGroupFilter(t));
+      list = state.tasks.filter(t=>(t.pinned || t.todayFlag) && !t.waitFlag && !t.done && matchesSearch(t) && passesGroupFilter(t));
     } else if(dagensListFilter === 'iphone'){
-      list = state.tasks.filter(t=>t.iphoneFlag && !t.done && matchesSearch(t) && passesGroupFilter(t));
+      list = state.tasks.filter(t=>t.iphoneFlag && !t.waitFlag && !t.done && matchesSearch(t) && passesGroupFilter(t));
     } else { // 'all'
-      list = state.tasks.filter(t=>(t.pinned || t.todayFlag || t.iphoneFlag || t.date===todayISO()) && !t.done && matchesSearch(t) && passesGroupFilter(t));
+      list = state.tasks.filter(t=>(t.pinned || t.todayFlag || t.iphoneFlag || t.date===todayISO()) && !t.waitFlag && !t.done && matchesSearch(t) && passesGroupFilter(t));
     }
   } else {
-    list = state.tasks.filter(t=>(t.pinned || t.todayFlag) && !t.done && matchesSearch(t) && passesGroupFilter(t));
+    list = state.tasks.filter(t=>(t.pinned || t.todayFlag) && !t.waitFlag && !t.done && matchesSearch(t) && passesGroupFilter(t));
   }
 
   if(!list.length && (tv === 'list' || tv === 'priority')){
@@ -2130,24 +2369,23 @@ function renderIphoneX(){
   const filter = state.iphoneXFilter || 'all';
   const baseFilter = t => !t.done && matchesSearch(t);
 
-  const urgentList = state.tasks.filter(t=>t.category==='urgent' && baseFilter(t)).sort(sortFn);
-  // I dag-ramme: todayFlag=true, men ikke urgent (Haster har høyere prioritet)
-  const todayList = state.tasks.filter(t=>t.todayFlag && t.category!=='urgent' && baseFilter(t)).sort(sortFn);
-  // A/B/C: må også ekskludere todayFlag (hvis det skal vises der)
-  // Men siden todayFlag er separat (1B) viser vi det som egen ramme. Hierarki:
-  // En oppgave med kategori='a' OG todayFlag=true havner i I dag-rammen (siden den er over A)
-  const aList = state.tasks.filter(t=>t.category==='a' && !t.todayFlag && baseFilter(t)).sort(sortFn);
-  const bList = state.tasks.filter(t=>t.category==='b' && !t.todayFlag && baseFilter(t)).sort(sortFn);
-  const cList = state.tasks.filter(t=>t.category==='c' && !t.todayFlag && baseFilter(t)).sort(sortFn);
-  // Pinnet: ikke har en kategori, ikke todayFlag
-  const pinnedList = state.tasks.filter(t=>t.pinned && !t.todayFlag && (t.category==='none' || !t.category) && baseFilter(t)).sort(sortFn);
-  // iPhone-merket: ikke pinnet, ikke todayFlag, ikke kategori
-  const iphoneList = state.tasks.filter(t=>!t.pinned && !t.todayFlag && t.iphoneFlag && (t.category==='none' || !t.category) && baseFilter(t)).sort(sortFn);
+  // Nytt hierarki (v2.73): Haster > I dag > Pinnet > iPhone > A > B > C > På vent
+  // På vent har LAVEST prioritet - så waitFlag overskygger alle andre kategorier/flagg
+  const urgentList = state.tasks.filter(t=>t.category==='urgent' && !t.waitFlag && baseFilter(t)).sort(sortFn);
+  const todayList = state.tasks.filter(t=>t.todayFlag && !t.waitFlag && t.category!=='urgent' && baseFilter(t)).sort(sortFn);
+  const pinnedList = state.tasks.filter(t=>t.pinned && !t.waitFlag && !t.todayFlag && t.category!=='urgent' && baseFilter(t)).sort(sortFn);
+  const iphoneList = state.tasks.filter(t=>t.iphoneFlag && !t.waitFlag && !t.pinned && !t.todayFlag && t.category!=='urgent' && baseFilter(t)).sort(sortFn);
+  const aList = state.tasks.filter(t=>t.category==='a' && !t.waitFlag && !t.todayFlag && !t.pinned && !t.iphoneFlag && baseFilter(t)).sort(sortFn);
+  const bList = state.tasks.filter(t=>t.category==='b' && !t.waitFlag && !t.todayFlag && !t.pinned && !t.iphoneFlag && baseFilter(t)).sort(sortFn);
+  const cList = state.tasks.filter(t=>t.category==='c' && !t.waitFlag && !t.todayFlag && !t.pinned && !t.iphoneFlag && baseFilter(t)).sort(sortFn);
+  // På vent: alle oppgaver med waitFlag, uavhengig av andre flagg
+  const waitList = state.tasks.filter(t=>t.waitFlag && baseFilter(t)).sort(sortFn);
 
   const renderRow = (t, color) => {
     const contactTag = (t.contact||'').trim() ? `<div class="iphonex-contact">${ICONS.user}<span>${escapeHtml(t.contact)}</span></div>` : '';
-    return `<div class="iphonex-row" data-iphonex-edit="${t.id}" data-id="${t.id}">
+    return `<div class="iphonex-row ${t.done?'done':''}" data-iphonex-edit="${t.id}" data-id="${t.id}">
       <button class="iphonex-grip" data-iphonex-grip="${t.id}" aria-label="Dra for å flytte">${ICONS.grip}</button>
+      <div class="iphonex-check ${t.done?'checked':''}" data-iphonex-check="${t.id}" role="checkbox" aria-checked="${t.done?'true':'false'}">${t.done?ICONS.check:''}</div>
       <div style="flex:1;min-width:0">
         ${contactTag}
         <span class="iphonex-title">${escapeHtml(t.title||'')}</span>
@@ -2162,11 +2400,12 @@ function renderIphoneX(){
     <button class="cat-btn cat-all ${filter==='all'?'active':''}" data-iphonex-filter="all">Alle</button>
     <button class="cat-btn cat-urgent ${filter==='urgent'?'active':''}" data-iphonex-filter="urgent">Haster</button>
     <button class="cat-btn cat-today ${filter==='today'?'active':''}" data-iphonex-filter="today">${ICONS.sun}<span>I dag</span></button>
+    <button class="cat-btn cat-pinned ${filter==='pinned'?'active':''}" data-iphonex-filter="pinned">${ICONS.star} Pinnet</button>
+    <button class="cat-btn cat-iphone ${filter==='iphone'?'active':''}" data-iphonex-filter="iphone">${ICONS.phone} iPhone</button>
     <button class="cat-btn cat-a ${filter==='a'?'active':''}" data-iphonex-filter="a">A</button>
     <button class="cat-btn cat-b ${filter==='b'?'active':''}" data-iphonex-filter="b">B</button>
     <button class="cat-btn cat-c ${filter==='c'?'active':''}" data-iphonex-filter="c">C</button>
-    <button class="cat-btn cat-pinned ${filter==='pinned'?'active':''}" data-iphonex-filter="pinned">${ICONS.star} Pinnet</button>
-    <button class="cat-btn cat-iphone ${filter==='iphone'?'active':''}" data-iphonex-filter="iphone">${ICONS.phone} iPhone</button>
+    <button class="cat-btn cat-wait ${filter==='wait'?'active':''}" data-iphonex-filter="wait">${ICONS.pause}<span>På vent</span></button>
   </div>`;
 
   // Bygg seksjons-HTML hver for seg
@@ -2203,35 +2442,38 @@ function renderIphoneX(){
   const showC = (filter==='all' || filter==='c') && cList.length > 0 && !isHiddenInList('c');
   const showPinned = (filter==='all' || filter==='pinned') && pinnedList.length > 0 && !isHiddenInList('pinned');
   const showIphone = (filter==='all' || filter==='iphone') && iphoneList.length > 0 && !isHiddenInList('iphone');
+  const showWait = (filter==='all' || filter==='wait') && waitList.length > 0 && !isHiddenInList('wait');
 
   // Kontroll-knapper: Lukk alle / Åpne alle + Velg rammer
   const collapseKeys = [];
   if(showUrgent) collapseKeys.push('urgent');
   if(showToday) collapseKeys.push('today');
+  if(showPinned) collapseKeys.push('pinned');
+  if(showIphone) collapseKeys.push('iphone');
   if(showA) collapseKeys.push('a');
   if(showB) collapseKeys.push('b');
   if(showC) collapseKeys.push('c');
-  if(showPinned) collapseKeys.push('pinned');
-  if(showIphone) collapseKeys.push('iphone');
+  if(showWait) collapseKeys.push('wait');
   const collapsedSections = state.collapsedSections || {};
   const allCollapsed = collapseKeys.length > 0 && collapseKeys.every(k=>collapsedSections[k]);
   const toggleLabel = allCollapsed ? 'Åpne alle' : 'Lukk alle';
   const toggleIcon = allCollapsed ? ICONS.chevronDown : ICONS.chevronUp;
-  const visibleCount = 7 - hidden.length;
+  const visibleCount = 8 - hidden.length;
   const controls = `<div class="alle-group-controls">
     <button class="alle-group-ctrl-btn primary" data-iphonex-toggle-all>${toggleIcon}<span>${toggleLabel}</span></button>
-    <button class="alle-group-ctrl-btn" data-iphonex-pick-frames>${ICONS.filter}<span>Velg rammer (${visibleCount}/7)</span></button>
+    <button class="alle-group-ctrl-btn" data-iphonex-pick-frames>${ICONS.filter}<span>Velg rammer (${visibleCount}/8)</span></button>
   </div>`;
 
   let body = '';
 
   if(showUrgent) body += buildSection('urgent-section', ICONS.warning, 'Haster', 'iphonex-body-urgent', urgentList, 'dividersIphoneXUrgent', 'color:#FF8080;background:rgba(226,75,74,0.15)', 'urgent', 'urgent');
   if(showToday) body += buildSection('today-section', ICONS.sun, 'I dag', 'iphonex-body-today', todayList, 'dividersIphoneXToday', 'color:#5DDFF1;background:rgba(0,180,219,0.15)', 'today', 'today');
+  if(showPinned) body += buildSection('pinned-section', ICONS.starFilled, 'Pinnete', 'iphonex-body-pinned', pinnedList, 'dividersIphoneXPinned', 'color:#FAC775;background:rgba(239,159,39,0.12)', 'pinned', 'pinned');
+  if(showIphone) body += buildSection('iphone-section', ICONS.phone, 'iPhone-merkede', '', iphoneList, 'dividersIphoneXIphone', '', 'iphone', 'iphone');
   if(showA) body += buildSection('cat-a-section', `<span class="cat-letter-badge cat-a-badge">A</span>`, 'A', 'iphonex-body-a', aList, 'dividersIphoneXA', 'color:#FAC775;background:rgba(239,159,39,0.15)', 'a', 'a');
   if(showB) body += buildSection('cat-b-section', `<span class="cat-letter-badge cat-b-badge">B</span>`, 'B', 'iphonex-body-b', bList, 'dividersIphoneXB', 'color:#AED183;background:rgba(99,153,34,0.15)', 'b', 'b');
   if(showC) body += buildSection('cat-c-section', `<span class="cat-letter-badge cat-c-badge">C</span>`, 'C', 'iphonex-body-c', cList, 'dividersIphoneXC', 'color:#B5AEF0;background:rgba(127,119,221,0.15)', 'c', 'c');
-  if(showPinned) body += buildSection('pinned-section', ICONS.starFilled, 'Pinnete', 'iphonex-body-pinned', pinnedList, 'dividersIphoneXPinned', 'color:#FAC775;background:rgba(239,159,39,0.12)', 'pinned', 'pinned');
-  if(showIphone) body += buildSection('iphone-section', ICONS.phone, 'iPhone-merkede', '', iphoneList, 'dividersIphoneXIphone', '', 'iphone', 'iphone');
+  if(showWait) body += buildSection('wait-section', ICONS.pause, 'På vent', 'iphonex-body-wait', waitList, 'dividersIphoneXWait', 'color:#D3D1C7;background:rgba(136,135,128,0.18)', 'wait', 'wait');
 
   if(!body){
     let msg;
@@ -2240,6 +2482,7 @@ function renderIphoneX(){
     else if(filter==='today') msg = 'Ingen oppgaver merket for I dag';
     else if(filter==='pinned') msg = 'Ingen pinnete oppgaver';
     else if(filter==='iphone') msg = 'Ingen iPhone-merkede oppgaver';
+    else if(filter==='wait') msg = 'Ingen oppgaver på vent';
     else msg = `Ingen oppgaver merket ${filter.toUpperCase()}`;
     body = `<div class="empty">${ICONS.phone}<p>${msg}</p><p style="font-size:11px;margin-top:6px;color:var(--text-tertiary)">Sett kategori i registreringsskjemaet eller bruk stjerne / mobil-emblem</p></div>`;
   }
@@ -2457,7 +2700,7 @@ function renumberSequence(dividerId, dropTarget, dropPosition){
 }
 
 function findDividerAnywhere(id){
-  const lists = ['dividers','dividersIphoneXPinned','dividersIphoneXIphone','dividersIphoneXUrgent','dividersIphoneXToday','dividersIphoneXA','dividersIphoneXB','dividersIphoneXC'];
+  const lists = ['dividers','dividersIphoneXPinned','dividersIphoneXIphone','dividersIphoneXUrgent','dividersIphoneXToday','dividersIphoneXWait','dividersIphoneXA','dividersIphoneXB','dividersIphoneXC'];
   for(const k of lists){
     const arr = state[k] || [];
     const d = arr.find(x=>x.id===id);
@@ -2736,6 +2979,10 @@ function renderAll(){
     list = state.tasks.filter(t=>t.iphoneFlag && baseFilter(t)).sort(sortFn);
     cssClass = 'iphone-section'; headerIcon = ICONS.phone; title = 'iPhone-merkede';
     msg = 'Ingen iPhone-merkede oppgaver';
+  } else if(af === 'wait'){
+    list = state.tasks.filter(t=>t.waitFlag && baseFilter(t)).sort(sortFn);
+    cssClass = 'wait-section'; headerIcon = ICONS.pause; title = 'På vent';
+    msg = 'Ingen oppgaver på vent';
   }
 
   if(!list || !list.length) return `<div class="empty">${ICONS.checks}<p>${msg}</p></div>`;
@@ -2809,6 +3056,184 @@ function renderDone(){
   return stats + groupsHTML + clearBtn;
 }
 
+function renderSms(){
+  // Hvis vi er i edit-modus
+  if(state.smsForm && state.smsForm.editingId !== undefined && state.smsForm._editing){
+    return renderSmsForm();
+  }
+  const drafts = [...(state.smsDrafts||[])].sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+  const q = (state.smsSearch||'').toLowerCase().trim();
+  const filtered = q ? drafts.filter(d=>(d.name||'').toLowerCase().includes(q) || (d.body||'').toLowerCase().includes(q) || (d.phone||'').toLowerCase().includes(q)) : drafts;
+
+  const searchHTML = `<div class="sms-toolbar">
+    <div class="group-search-row" style="flex:1;margin:0">
+      ${ICONS.search}
+      <input type="text" class="group-search-input" id="sms-search" placeholder="Søk i SMS-utkast..." autocomplete="off" value="${escapeAttr(state.smsSearch||'')}" />
+    </div>
+    <button class="fab-btn primary" id="sms-new-btn" style="min-height:34px;padding:6px 12px">${ICONS.plus}<span>Ny SMS</span></button>
+  </div>`;
+
+  if(!drafts.length){
+    return searchHTML + `<div class="empty">${ICONS.message}<p>Ingen SMS-utkast enda</p><p style="font-size:11px;margin-top:6px;color:var(--text-tertiary)">Trykk "Ny SMS" for å lage et utkast</p></div>`;
+  }
+  if(!filtered.length){
+    return searchHTML + `<div class="empty">${ICONS.search}<p>Ingen treff for "${escapeHtml(q)}"</p></div>`;
+  }
+
+  const cards = filtered.map(d=>{
+    const task = d.taskId ? state.tasks.find(t=>t.id===d.taskId) : null;
+    const sentBadge = d.sentAt ? `<span class="sms-sent-badge">✓ Sendt ${fmtDate(d.sentAt.slice(0,10))}</span>` : '';
+    const charLimit = 160;
+    const charCount = (d.body||'').length;
+    const charClass = charCount > charLimit ? 'over' : (charCount > charLimit*0.85 ? 'warn' : '');
+    return `<div class="sms-draft-card ${d.sentAt?'sent':''}" data-sms-edit="${d.id}">
+      <div class="sms-draft-main">
+        <div class="sms-draft-header">
+          <span class="sms-draft-name">${ICONS.user}<span>${escapeHtml(d.name || 'Uten navn')}</span></span>
+          ${d.phone ? `<span class="sms-draft-phone">${escapeHtml(d.phone)}</span>` : ''}
+          ${sentBadge}
+        </div>
+        <div class="sms-draft-body">${escapeHtml(d.body||'')}</div>
+        <div class="sms-draft-meta">
+          <span>${fmtDate((d.updatedAt||d.createdAt||'').slice(0,10))} · <span class="sms-char-count ${charClass}">${charCount} tegn</span></span>
+          ${task ? `<span class="sms-task-link">${ICONS.link} ${escapeHtml(task.title||'')}</span>` : ''}
+        </div>
+      </div>
+      <div class="sms-draft-actions">
+        <button class="sms-action-btn" data-sms-copy="${d.id}" aria-label="Kopier">${ICONS.copy}<span>Kopier</span></button>
+        <button class="sms-action-btn primary" data-sms-send="${d.id}" aria-label="Send via Meldinger">${ICONS.send}<span>Send</span></button>
+        <button class="sms-action-btn small" data-sms-delete="${d.id}" aria-label="Slett">${ICONS.trash}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return searchHTML + cards;
+}
+
+function renderSmsForm(){
+  const f = state.smsForm;
+  const charCount = (f.body||'').length;
+  const charLimit = 160;
+  const charClass = charCount > charLimit ? 'over' : (charCount > charLimit*0.85 ? 'warn' : '');
+  const linkedTask = f.taskId ? state.tasks.find(t=>t.id===f.taskId) : null;
+
+  const tplButtons = (state.smsTemplates||[]).map(t=>
+    `<button type="button" class="sms-tpl-btn" data-sms-tpl="${t.id}" title="${escapeAttr(t.body)}">${escapeHtml(t.name)}</button>`
+  ).join('');
+
+  return `<div class="form-screen">
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="fab-btn" id="sms-cancel">Avbryt</button>
+      <button class="fab-btn primary" id="sms-save" style="flex:1">${f.editingId?'Oppdater':'Lagre utkast'}</button>
+    </div>
+    <div class="form-section primary">
+      <div class="form-section-header">
+        ${ICONS.message}
+        <span class="form-section-title">${f.editingId?'Rediger SMS':'Ny SMS'}</span>
+      </div>
+      <div class="form-section-body">
+        <label class="form-sub-label">Mottaker (navn)</label>
+        <input type="text" id="sms-name" value="${escapeAttr(f.name||'')}" placeholder="Per Olsen" style="margin-bottom:10px" />
+
+        <label class="form-sub-label">Telefonnummer</label>
+        <input type="tel" id="sms-phone" value="${escapeAttr(f.phone||'')}" placeholder="+47 123 45 678" style="margin-bottom:10px" />
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label class="form-sub-label" style="margin:0">Melding</label>
+          <span class="sms-char-count ${charClass}"><span id="sms-char">${charCount}</span>/${charLimit} tegn</span>
+        </div>
+        <textarea id="sms-body" placeholder="Skriv meldingen her..." style="min-height:100px;font-size:13px;line-height:1.4">${escapeHtml(f.body||'')}</textarea>
+
+        ${linkedTask ? `<div class="linked-note-inline" style="background:rgba(55,138,221,0.08);border-color:rgba(55,138,221,0.5);border-left-color:#378ADD;margin-top:8px">
+          ${ICONS.link}
+          <div style="flex:1;min-width:0">
+            <div class="linked-note-inline-label" style="color:#85B7EB">Knyttet til oppgave</div>
+            <div class="linked-note-inline-title">${escapeHtml(linkedTask.title||'')}</div>
+          </div>
+          <button type="button" class="linked-note-inline-btn" id="sms-unlink-task">${ICONS.x}</button>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-header">
+        ${ICONS.copy}
+        <span class="form-section-title">Maler</span>
+        <button type="button" class="fab-btn" id="sms-new-tpl" style="margin-left:auto;font-size:10px;padding:4px 9px;min-height:26px">${ICONS.plus}<span>Lag mal</span></button>
+      </div>
+      <div class="form-section-body">
+        <div class="sms-tpl-row">${tplButtons || '<span style="font-size:11px;color:var(--text-tertiary);font-style:italic">Ingen maler enda</span>'}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="fab-btn" id="sms-copy" style="flex:1;background:rgba(0,180,219,0.18);border-color:#00B4DB;color:#5DDFF1">${ICONS.copy}<span>Kopier melding</span></button>
+      <button class="fab-btn primary" id="sms-send-now" style="flex:1">${ICONS.send}<span>Send (Meldinger)</span></button>
+    </div>
+  </div>`;
+}
+
+function renderGroups(){
+  state.groupsSearch1 = state.groupsSearch1 || '';
+  state.groupsSearch2 = state.groupsSearch2 || '';
+  const buildSet = (setNr, groupSet, color) => {
+    const sortedGroups = [...groupSet].sort((a,b)=>(a.order||0)-(b.order||0));
+    const taskGroupKey = setNr === 1 ? 'group1Id' : 'group2Id';
+    const searchQuery = (setNr === 1 ? state.groupsSearch1 : state.groupsSearch2).toLowerCase().trim();
+    const filteredGroups = searchQuery
+      ? sortedGroups.filter(g => (g.name||'').toLowerCase().includes(searchQuery))
+      : sortedGroups;
+
+    const rgb = hexToRgb(color);
+    const headerStyle = `background:rgba(${rgb},0.18);border-bottom:1px solid ${color}`;
+    const sectionStyle = `border-color:${color}`;
+
+    const rowsHTML = filteredGroups.map(g=>{
+      const count = state.tasks.filter(t=>!t.done && t[taskGroupKey]===g.id).length;
+      return `<div class="group-mgmt-row" data-group-row="${g.id}" data-set="${setNr}" style="border-left:3px solid ${g.color}">
+        <button class="group-mgmt-grip" data-group-grip="${g.id}" data-set="${setNr}" aria-label="Dra for å sortere">${ICONS.grip}</button>
+        <span class="group-mgmt-color" style="background:${g.color}"></span>
+        <span class="group-mgmt-name">${escapeHtml(g.name)}</span>
+        <span class="group-mgmt-count">${count} ${count===1?'oppgave':'oppgaver'}</span>
+        <button class="group-mgmt-action" data-group-edit="${g.id}" data-set="${setNr}" aria-label="Rediger">${ICONS.edit}</button>
+        <button class="group-mgmt-action" data-group-delete="${g.id}" data-set="${setNr}" aria-label="Slett">${ICONS.trash}</button>
+      </div>`;
+    }).join('');
+
+    let bodyContent;
+    if(!sortedGroups.length){
+      bodyContent = `<div style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:11px">Ingen grupper enda</div>`;
+    } else if(!filteredGroups.length){
+      bodyContent = `<div style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:11px">Ingen treff for "${escapeHtml(searchQuery)}"</div>`;
+    } else {
+      bodyContent = rowsHTML;
+    }
+
+    const searchValue = setNr === 1 ? state.groupsSearch1 : state.groupsSearch2;
+    const searchHTML = sortedGroups.length > 3 ? `
+      <div class="group-mgmt-search">
+        ${ICONS.search}
+        <input type="text" class="group-mgmt-search-input" data-group-mgmt-search="${setNr}" placeholder="Søk i Gruppe ${setNr}..." value="${escapeAttr(searchValue)}" autocomplete="off" />
+        ${searchValue ? `<button class="group-mgmt-search-clear" data-group-mgmt-search-clear="${setNr}" aria-label="Tøm">${ICONS.x}</button>` : ''}
+      </div>` : '';
+
+    return `<div class="group-mgmt-section" style="${sectionStyle}">
+      <div class="group-mgmt-header" style="${headerStyle}">
+        ${ICONS.tag||ICONS.user}
+        <span class="group-mgmt-title" style="color:${color}">Gruppe ${setNr}</span>
+        <span class="group-mgmt-section-count" style="color:${color}">${searchQuery && filteredGroups.length !== sortedGroups.length ? filteredGroups.length+'/'+sortedGroups.length : sortedGroups.length}</span>
+        <button class="group-mgmt-new-btn" data-group-new="${setNr}" style="background:rgba(${rgb},0.15);color:${color};border:0.5px solid ${color}">${ICONS.plus}<span>Ny</span></button>
+      </div>
+      ${searchHTML}
+      <div class="group-mgmt-body">
+        ${bodyContent}
+      </div>
+    </div>`;
+  };
+
+  return buildSet(1, state.groups1, '#378ADD') + buildSet(2, state.groups2, '#D85A30');
+}
+
 function renderNotes(){
   const notes = state.notes.filter(matchesSearchNote).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.createdAt||'').localeCompare(a.createdAt||''));
   if(!notes.length) return `<div class="empty">${ICONS.notebook}<p>Ingen notater enda</p><p style="font-size:11px;margin-top:6px;color:var(--text-tertiary)">Trykk "Nytt notat" for å starte</p></div>`;
@@ -2826,7 +3251,7 @@ function noteCardHTML(n){
   const isExpanded = state.expandedNotes.has(n.id);
   const desc = n.description && n.description.trim() ? n.description : '';
   const preview = !isExpanded && n.body ? `<p class="note-card-preview">${highlightSearch(n.body)}</p>` : '';
-  const full = isExpanded && n.body ? `<div class="note-card-full">${highlightSearch(n.body)}</div>` : '';
+  const full = isExpanded && n.body ? `<div class="note-card-full md-preview">${markdownToHtml(n.body)}</div>` : '';
   return `<div class="note-card ${isExpanded?'expanded':''}" data-toggle-note-card="${n.id}">
     <div class="note-card-header">
       <div class="note-card-body">
@@ -2856,7 +3281,24 @@ function renderNoteForm(){
     </div>
     <div class="form-field">
       <label class="form-label">Notat</label>
-      <textarea id="nf-body" placeholder="Skriv notatet her..." style="min-height:140px">${escapeHtml(f.body)}</textarea>
+      <div class="md-toolbar" data-rich-toolbar="nf-body-rich">
+        <button type="button" class="md-btn" data-rich="bold" title="Fet (Cmd+B)"><span style="font-weight:700;font-family:Georgia,serif">B</span></button>
+        <button type="button" class="md-btn" data-rich="italic" title="Kursiv (Cmd+I)"><span style="font-style:italic;font-family:Georgia,serif">I</span></button>
+        <button type="button" class="md-btn" data-rich="strike" title="Gjennomstreket"><span style="text-decoration:line-through;font-family:Georgia,serif">S</span></button>
+        <button type="button" class="md-btn" data-rich="code" title="Kode"><span style="font-family:monospace">&lt;/&gt;</span></button>
+        <span class="md-sep"></span>
+        <button type="button" class="md-btn" data-rich="h1" title="Overskrift 1"><span style="font-weight:700">H1</span></button>
+        <button type="button" class="md-btn" data-rich="h2" title="Overskrift 2"><span style="font-weight:700">H2</span></button>
+        <button type="button" class="md-btn" data-rich="h3" title="Overskrift 3"><span style="font-weight:700">H3</span></button>
+        <span class="md-sep"></span>
+        <button type="button" class="md-btn" data-rich="ul" title="Punktliste">${ICONS.list||'•'}</button>
+        <button type="button" class="md-btn" data-rich="ol" title="Nummerert liste">1.</button>
+        <button type="button" class="md-btn" data-rich="task" title="Sjekkliste">☐</button>
+        <button type="button" class="md-btn" data-rich="quote" title="Sitat-blokk">&gt;</button>
+        <span class="md-sep"></span>
+        <button type="button" class="md-btn" data-rich="link" title="Lenke">${ICONS.link||'🔗'}</button>
+      </div>
+      <div id="nf-body-rich" class="rich-editor" contenteditable="true" data-placeholder="Skriv notatet her..." style="min-height:200px">${markdownToHtml(f.body||'')}</div>
     </div>
     <div class="form-field">
       <label class="form-label">Dato</label>
@@ -2892,7 +3334,43 @@ function renderForm(){
 
   let bodyHTML = '';
   if(f.mode === 'notes'){
-    bodyHTML = `<textarea id="f-notes" placeholder="Detaljer, lenker...">${escapeHtml(f.notes)}</textarea>`;
+    const initialHtml = markdownToHtml(f.notes||'');
+    bodyHTML = `<div class="rich-editor-wrap">
+      <div class="md-toolbar md-toolbar-compact" data-rich-toolbar="f-notes-rich">
+        <button type="button" class="md-btn" data-rich="bold" title="Fet"><span style="font-weight:700;font-family:Georgia,serif">B</span></button>
+        <button type="button" class="md-btn" data-rich="italic" title="Kursiv"><span style="font-style:italic;font-family:Georgia,serif">I</span></button>
+        <button type="button" class="md-btn" data-rich="strike" title="Gjennomstreket"><span style="text-decoration:line-through;font-family:Georgia,serif">S</span></button>
+        <button type="button" class="md-btn" data-rich="code" title="Kode"><span style="font-family:monospace">&lt;/&gt;</span></button>
+        <span class="md-sep"></span>
+        <button type="button" class="md-btn" data-rich="h2" title="Overskrift"><span style="font-weight:700">H</span></button>
+        <button type="button" class="md-btn" data-rich="ul" title="Liste">${ICONS.list||'•'}</button>
+        <button type="button" class="md-btn" data-rich="task" title="Sjekkliste">☐</button>
+        <button type="button" class="md-btn" data-rich="quote" title="Sitat">&gt;</button>
+        <span class="md-sep"></span>
+        <button type="button" class="md-btn" data-rich="link" title="Lenke">${ICONS.link}</button>
+      </div>
+      <div id="f-notes-rich" class="rich-editor" contenteditable="true" data-placeholder="Detaljer, lenker...">${initialHtml}</div>
+    </div>
+    ${(()=>{
+      const linkedNote = state.notes.find(n=>n.id === f.noteId);
+      if(linkedNote){
+        return `<div class="linked-note-inline" data-open-linked-note="${linkedNote.id}">
+          ${ICONS.notebook}
+          <div style="flex:1;min-width:0">
+            <div class="linked-note-inline-label">Tilkoblet notat</div>
+            <div class="linked-note-inline-title">${escapeHtml(linkedNote.title||'Uten tittel')}</div>
+          </div>
+          <button type="button" class="linked-note-inline-btn" id="f-change-note">Bytt</button>
+          <button type="button" class="linked-note-inline-btn" id="f-unlink-note-inline">${ICONS.x}</button>
+        </div>`;
+      } else {
+        return `<button type="button" class="linked-note-inline-empty" id="f-attach-note">
+          ${ICONS.notebook}
+          <span>Knytt til et notat...</span>
+          ${ICONS.plus}
+        </button>`;
+      }
+    })()}`;
   } else {
     const items = f.subtasks.length ? f.subtasks : [{id:uid('s'),text:'',done:false}];
     if(!f.subtasks.length) f.subtasks = items;
@@ -2936,6 +3414,7 @@ function renderForm(){
         <button class="cat-btn cat-a ${f.category==='a'?'active':''}" data-set-category="a">A</button>
         <button class="cat-btn cat-b ${f.category==='b'?'active':''}" data-set-category="b">B</button>
         <button class="cat-btn cat-c ${f.category==='c'?'active':''}" data-set-category="c">C</button>
+        <button class="cat-btn cat-wait ${f.waitFlag?'active':''}" id="f-toggle-wait" type="button">${ICONS.pause}<span>På vent</span></button>
       </div>
       <div class="form-section-body">
         <label class="form-sub-label">Tittel</label>
@@ -2960,30 +3439,42 @@ function renderForm(){
         <div style="display:flex;flex-direction:column;gap:12px">
           <div style="min-width:0">
             <label class="form-sub-label">Gruppe 1</label>
-            <div class="group-search-row" style="margin-bottom:6px">
-              ${ICONS.search}
-              <input type="text" class="group-search-input" data-group-search="1" placeholder="Søk..." autocomplete="off" />
-            </div>
             <div style="display:flex;gap:4px;align-items:center">
-              <select id="f-group1" style="flex:1;min-width:0">
-                <option value="">Uten gruppe</option>
-                ${sortedG1.map(g=>`<option value="${g.id}" data-group-name="${escapeAttr(g.name.toLowerCase())}" ${f.group1Id===g.id?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}
-              </select>
-              <button class="fab-btn" id="f-new-group1" style="flex:0 0 auto;padding:5px 8px;min-width:30px;min-height:30px" aria-label="Ny gruppe 1">${ICONS.plus}</button>
+              ${(()=>{ const selG1 = state.groups1.find(g=>g.id===f.group1Id);
+                if(selG1){
+                  return `<button type="button" class="form-group-picker active" data-form-group-picker="1" style="border-color:${selG1.color};border-left:3px solid ${selG1.color};color:${selG1.color}">
+                    <span class="form-group-dot" style="background:${selG1.color}"></span>
+                    <span class="form-group-name">${escapeHtml(selG1.name)}</span>
+                    ${ICONS.chevronDown}
+                  </button>`;
+                } else {
+                  return `<button type="button" class="form-group-picker" data-form-group-picker="1">
+                    <span class="form-group-name" style="color:var(--text-tertiary)">Uten gruppe</span>
+                    ${ICONS.chevronDown}
+                  </button>`;
+                }
+              })()}
+              <button class="fab-btn" id="f-new-group1" style="flex:0 0 auto;padding:5px 8px;min-width:36px;min-height:36px" aria-label="Ny gruppe 1">${ICONS.plus}</button>
             </div>
           </div>
           <div style="min-width:0">
             <label class="form-sub-label">Gruppe 2</label>
-            <div class="group-search-row" style="margin-bottom:6px">
-              ${ICONS.search}
-              <input type="text" class="group-search-input" data-group-search="2" placeholder="Søk..." autocomplete="off" />
-            </div>
             <div style="display:flex;gap:4px;align-items:center">
-              <select id="f-group2" style="flex:1;min-width:0">
-                <option value="">Uten gruppe</option>
-                ${sortedG2.map(g=>`<option value="${g.id}" data-group-name="${escapeAttr(g.name.toLowerCase())}" ${f.group2Id===g.id?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}
-              </select>
-              <button class="fab-btn" id="f-new-group2" style="flex:0 0 auto;padding:5px 8px;min-width:30px;min-height:30px" aria-label="Ny gruppe 2">${ICONS.plus}</button>
+              ${(()=>{ const selG2 = state.groups2.find(g=>g.id===f.group2Id);
+                if(selG2){
+                  return `<button type="button" class="form-group-picker active" data-form-group-picker="2" style="border-color:${selG2.color};border-left:3px solid ${selG2.color};color:${selG2.color}">
+                    <span class="form-group-dot" style="background:${selG2.color}"></span>
+                    <span class="form-group-name">${escapeHtml(selG2.name)}</span>
+                    ${ICONS.chevronDown}
+                  </button>`;
+                } else {
+                  return `<button type="button" class="form-group-picker" data-form-group-picker="2">
+                    <span class="form-group-name" style="color:var(--text-tertiary)">Uten gruppe</span>
+                    ${ICONS.chevronDown}
+                  </button>`;
+                }
+              })()}
+              <button class="fab-btn" id="f-new-group2" style="flex:0 0 auto;padding:5px 8px;min-width:36px;min-height:36px" aria-label="Ny gruppe 2">${ICONS.plus}</button>
             </div>
           </div>
         </div>
@@ -3040,7 +3531,38 @@ function renderForm(){
       </div>
       <div class="form-section-body">
         <label class="form-sub-label">Navn | firma</label>
-        <input type="text" id="f-contact" value="${escapeAttr(f.contact||'')}" placeholder="Ola Nordmann | Telia AS" />
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="text" id="f-contact" value="${escapeAttr(f.contact||'')}" placeholder="Ola Nordmann | Telia AS" style="flex:1;margin-bottom:0" />
+          <button type="button" class="fab-btn" id="f-sms-btn" style="flex:0 0 auto;padding:7px 11px;min-height:36px;background:rgba(0,180,219,0.18);border-color:#00B4DB;color:#5DDFF1" aria-label="Lag SMS">${ICONS.message}<span>SMS</span></button>
+        </div>
+      </div>
+    </div>`;
+
+  const linkedNote = state.notes.find(n=>n.id === f.noteId);
+  const noteSection = `<div class="form-section">
+      <div class="form-section-header">
+        ${ICONS.notebook||ICONS.tag}
+        <span class="form-section-title">Tilkoblet notat${linkedNote?' ✓':''}</span>
+      </div>
+      <div class="form-section-body">
+        ${linkedNote ? `
+          <div class="linked-note-card" data-open-linked-note="${linkedNote.id}">
+            <div style="flex:1;min-width:0">
+              <div class="linked-note-title">${escapeHtml(linkedNote.title || 'Uten tittel')}</div>
+              ${linkedNote.description ? `<div class="linked-note-desc">${escapeHtml(linkedNote.description)}</div>` : ''}
+            </div>
+            <button class="icon-btn" id="f-unlink-note" aria-label="Fjern kobling">${ICONS.x}</button>
+          </div>
+        ` : `
+          <div class="linked-note-empty">
+            <div class="group-search-row">
+              ${ICONS.search}
+              <input type="text" id="f-note-search" placeholder="Søk i notater..." autocomplete="off" />
+            </div>
+            <div id="f-note-results" class="linked-note-results"></div>
+            <button type="button" class="fab-btn" id="f-new-note" style="width:100%;justify-content:center">${ICONS.plus} Opprett nytt notat</button>
+          </div>
+        `}
       </div>
     </div>`;
 
@@ -3099,7 +3621,7 @@ function wireTasks(){
     b.addEventListener('click',(e)=>{
       e.stopPropagation();
       const hidden = state.iphoneXHidden || [];
-      const allKeys = ['urgent','today','a','b','c','pinned','iphone'].filter(k=>!hidden.includes(k));
+      const allKeys = ['urgent','today','pinned','iphone','a','b','c','wait'].filter(k=>!hidden.includes(k));
       if(!state.collapsedSections) state.collapsedSections = {};
       const allCollapsed = allKeys.length > 0 && allKeys.every(k=>state.collapsedSections[k]);
       if(allCollapsed){
@@ -3161,10 +3683,25 @@ function wireTasks(){
       save(); render();
     });
   });
+  // Checkbox i iPhone X-rader - markere som ferdig/ikke ferdig
+  document.querySelectorAll('[data-iphonex-check]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      e.preventDefault();
+      const id = el.dataset.iphonexCheck;
+      const t = state.tasks.find(x=>x.id===id);
+      if(!t) return;
+      t.done = !t.done;
+      t.completedAt = t.done ? new Date().toISOString() : null;
+      showToast(t.done ? 'Markert som ferdig' : 'Markert som ikke ferdig');
+      save(); render();
+    });
+  });
   document.querySelectorAll('[data-iphonex-edit]').forEach(el=>{
     el.addEventListener('click',(e)=>{
-      // Ikke trigger edit hvis klikket var på grip-håndtaket
+      // Ikke trigger edit hvis klikket var på grip eller checkbox
       if(e.target.closest('[data-iphonex-grip]')) return;
+      if(e.target.closest('[data-iphonex-check]')) return;
       const id = el.dataset.iphonexEdit;
       const t = state.tasks.find(x=>x.id===id);
       if(!t) return;
@@ -3173,7 +3710,7 @@ function wireTasks(){
         title:t.title||'', notes:t.notes||'', subtasks:(t.subtasks||[]).map(s=>({...s})),
         priority:t.priority||'med', date:t.date||todayISO(), futureDate:t.futureDate||'',
         group1Id:t.group1Id||'', group2Id:t.group2Id||'', www:t.www||'', contact:t.contact||'',
-        images:(t.images||[]).slice(), pinned:!!t.pinned, iphoneFlag:!!t.iphoneFlag, todayFlag:!!t.todayFlag,
+        images:(t.images||[]).slice(), pinned:!!t.pinned, iphoneFlag:!!t.iphoneFlag, todayFlag:!!t.todayFlag, waitFlag:!!t.waitFlag, noteId:t.noteId||'',
         category:t.category||'none',
         activeTab:'title',
         editingId:t.id, mode
@@ -3204,7 +3741,9 @@ function wireTasks(){
       row.classList.add('sort-dragging');
       grip.classList.add('dragging');
       if(isTouch && navigator.vibrate) navigator.vibrate(20);
-      dragState = { id, row, grip, ghost, offsetY: clientY - rect.top, lastSection: null };
+      // Finn opprinnelig seksjon for å vite om dra er innen samme eller på tvers
+      const sourceSection = row.closest('[data-section-target]');
+      dragState = { id, row, grip, ghost, offsetY: clientY - rect.top, lastSection: null, sourceSection, targetRow: null, insertBefore: false };
     };
     const moveDrag = (clientX, clientY) => {
       if(!dragState) return;
@@ -3212,14 +3751,30 @@ function wireTasks(){
       dragState.ghost.style.display = 'none';
       const under = document.elementFromPoint(clientX, clientY);
       dragState.ghost.style.display = '';
+      // Rydd opp gamle indikatorer
       if(dragState.lastSection){
         dragState.lastSection.classList.remove('section-drop-target');
       }
+      document.querySelectorAll('.iphonex-row.sort-target-above, .iphonex-row.sort-target-below').forEach(el=>{
+        el.classList.remove('sort-target-above','sort-target-below');
+      });
       const targetSection = under ? under.closest('[data-section-target]') : null;
-      if(!targetSection){ dragState.lastSection = null; return; }
-      // Ikke marker hvis det er samme seksjon (oppgavens nåværende kategori)
-      targetSection.classList.add('section-drop-target');
-      dragState.lastSection = targetSection;
+      const targetRow = under ? under.closest('.iphonex-row') : null;
+      if(!targetSection){ dragState.lastSection = null; dragState.targetRow = null; return; }
+      // Innen samme seksjon: sorter mellom rader
+      if(targetSection === dragState.sourceSection && targetRow && targetRow !== dragState.row){
+        const rect = targetRow.getBoundingClientRect();
+        const insertBefore = clientY < rect.top + rect.height / 2;
+        targetRow.classList.add(insertBefore ? 'sort-target-above' : 'sort-target-below');
+        dragState.targetRow = targetRow;
+        dragState.insertBefore = insertBefore;
+        dragState.lastSection = null;
+      } else {
+        // Annen seksjon: vis ramme-highlight
+        targetSection.classList.add('section-drop-target');
+        dragState.lastSection = targetSection;
+        dragState.targetRow = null;
+      }
     };
     const endDrag = () => {
       if(!dragState) return;
@@ -3227,35 +3782,78 @@ function wireTasks(){
       if(s.ghost && s.ghost.parentNode) s.ghost.parentNode.removeChild(s.ghost);
       s.row.classList.remove('sort-dragging');
       s.grip.classList.remove('dragging');
-      if(s.lastSection){
+      document.querySelectorAll('.iphonex-row.sort-target-above, .iphonex-row.sort-target-below').forEach(el=>{
+        el.classList.remove('sort-target-above','sort-target-below');
+      });
+      if(s.targetRow){
+        // Sortere innen samme ramme
+        const draggedTask = state.tasks.find(x=>x.id===s.id);
+        const targetTask = state.tasks.find(x=>x.id===s.targetRow.dataset.id);
+        if(draggedTask && targetTask){
+          // Finn alle task-id-er i denne rammen (i visningsrekkefølge)
+          const sectionEl = s.sourceSection;
+          const orderedIds = [...sectionEl.querySelectorAll('.iphonex-row[data-id]')].map(r=>r.dataset.id);
+          // Fjern dragged
+          const filtered = orderedIds.filter(id=>id !== s.id);
+          // Sett inn på riktig posisjon
+          const targetIdx = filtered.indexOf(s.targetRow.dataset.id);
+          if(targetIdx !== -1){
+            const insertAt = s.insertBefore ? targetIdx : targetIdx + 1;
+            filtered.splice(insertAt, 0, s.id);
+          }
+          // Tildel order basert på ny rekkefølge
+          filtered.forEach((tid, i)=>{
+            const tt = state.tasks.find(x=>x.id===tid);
+            if(tt) tt.order = i;
+          });
+          save();
+        }
+      } else if(s.lastSection){
         s.lastSection.classList.remove('section-drop-target');
         const target = s.lastSection.dataset.sectionTarget;
         const t = state.tasks.find(x=>x.id===s.id);
         if(t){
-          // Alternativ 2A: beholde alle flagg, sett bare det aktuelle
-          if(target === 'urgent'){ t.category = 'urgent'; showToast('Flyttet til Haster'); }
+          // Nytt hierarki: Haster > I dag > Pinnet > iPhone > A > B > C > På vent
+          if(target === 'urgent'){ t.category = 'urgent'; t.waitFlag = false; showToast('Flyttet til Haster'); }
           else if(target === 'today'){
             t.todayFlag = true;
-            // Fjern kategori så oppgaven havner i I dag-rammen (hierarki: Haster > I dag)
+            t.waitFlag = false;
             if(t.category !== 'urgent') t.category = 'none';
             showToast('Flyttet til I dag');
           }
-          else if(target === 'a'){ t.category = 'a'; t.todayFlag = false; showToast('Flyttet til A'); }
-          else if(target === 'b'){ t.category = 'b'; t.todayFlag = false; showToast('Flyttet til B'); }
-          else if(target === 'c'){ t.category = 'c'; t.todayFlag = false; showToast('Flyttet til C'); }
           else if(target === 'pinned'){
             t.pinned = true;
             t.todayFlag = false;
-            // Fjern kategori så oppgaven havner i Pinnete
+            t.waitFlag = false;
             t.category = 'none';
             showToast('Flyttet til Pinnete');
           }
           else if(target === 'iphone'){
             t.iphoneFlag = true;
             t.todayFlag = false;
+            t.waitFlag = false;
             t.category = 'none';
             t.pinned = false;
             showToast('Flyttet til iPhone-merkede');
+          }
+          else if(target === 'a'){
+            t.category = 'a';
+            t.todayFlag = false; t.pinned = false; t.iphoneFlag = false; t.waitFlag = false;
+            showToast('Flyttet til A');
+          }
+          else if(target === 'b'){
+            t.category = 'b';
+            t.todayFlag = false; t.pinned = false; t.iphoneFlag = false; t.waitFlag = false;
+            showToast('Flyttet til B');
+          }
+          else if(target === 'c'){
+            t.category = 'c';
+            t.todayFlag = false; t.pinned = false; t.iphoneFlag = false; t.waitFlag = false;
+            showToast('Flyttet til C');
+          }
+          else if(target === 'wait'){
+            t.waitFlag = true;
+            showToast('Satt på vent');
           }
           save();
         }
@@ -3346,6 +3944,17 @@ function wireTasks(){
       if(!t) return;
       t.todayFlag = !t.todayFlag;
       showToast(t.todayFlag ? 'Merket for I dag' : 'Fjernet I dag-merket');
+      save(); render();
+    });
+  });
+  document.querySelectorAll('[data-toggle-wait]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id = el.dataset.toggleWait;
+      const t = state.tasks.find(x=>x.id===id);
+      if(!t) return;
+      t.waitFlag = !t.waitFlag;
+      showToast(t.waitFlag ? 'Satt på vent' : 'Fjernet På vent-merket');
       save(); render();
     });
   });
@@ -3508,6 +4117,8 @@ function wireTasks(){
         pinned:!!t.pinned,
         iphoneFlag:!!t.iphoneFlag,
         todayFlag:!!t.todayFlag,
+        waitFlag:!!t.waitFlag,
+        noteId:t.noteId||'',
         category:t.category||'none',
         activeTab:'title',
         editingId:t.id,
@@ -3525,6 +4136,532 @@ function wireTasks(){
     });
     el.addEventListener('dragend',()=>el.classList.remove('dragging'));
   });
+}
+
+function wireGroups(){
+  // Søk i Grupper-fanen
+  document.querySelectorAll('[data-group-mgmt-search]').forEach(input=>{
+    input.addEventListener('input',(e)=>{
+      const setNr = parseInt(input.dataset.groupMgmtSearch);
+      if(setNr === 1) state.groupsSearch1 = input.value;
+      else state.groupsSearch2 = input.value;
+      // Re-render kun body+search-state for å beholde fokus i input
+      const groups = document.querySelectorAll('.group-mgmt-section');
+      const sectionEl = groups[setNr-1];
+      if(!sectionEl) return;
+      // Bygg om bare denne seksjonen
+      const html = (function(){
+        const groupSet = setNr === 1 ? state.groups1 : state.groups2;
+        const sortedGroups = [...groupSet].sort((a,b)=>(a.order||0)-(b.order||0));
+        const taskGroupKey = setNr === 1 ? 'group1Id' : 'group2Id';
+        const q = input.value.toLowerCase().trim();
+        const filtered = q ? sortedGroups.filter(g=>(g.name||'').toLowerCase().includes(q)) : sortedGroups;
+        if(!sortedGroups.length) return `<div style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:11px">Ingen grupper enda</div>`;
+        if(!filtered.length) return `<div style="padding:14px;text-align:center;color:var(--text-tertiary);font-size:11px">Ingen treff for "${escapeHtml(q)}"</div>`;
+        return filtered.map(g=>{
+          const count = state.tasks.filter(t=>!t.done && t[taskGroupKey]===g.id).length;
+          return `<div class="group-mgmt-row" data-group-row="${g.id}" data-set="${setNr}" style="border-left:3px solid ${g.color}">
+            <button class="group-mgmt-grip" data-group-grip="${g.id}" data-set="${setNr}" aria-label="Dra for å sortere">${ICONS.grip}</button>
+            <span class="group-mgmt-color" style="background:${g.color}"></span>
+            <span class="group-mgmt-name">${escapeHtml(g.name)}</span>
+            <span class="group-mgmt-count">${count} ${count===1?'oppgave':'oppgaver'}</span>
+            <button class="group-mgmt-action" data-group-edit="${g.id}" data-set="${setNr}" aria-label="Rediger">${ICONS.edit}</button>
+            <button class="group-mgmt-action" data-group-delete="${g.id}" data-set="${setNr}" aria-label="Slett">${ICONS.trash}</button>
+          </div>`;
+        }).join('');
+      })();
+      const body = sectionEl.querySelector('.group-mgmt-body');
+      if(body) body.innerHTML = html;
+      // Re-wire kun innen den nye body
+      wireGroupRowsIn(sectionEl);
+      // Oppdater count i header
+      const sortedGroups = [...(setNr === 1 ? state.groups1 : state.groups2)].sort((a,b)=>(a.order||0)-(b.order||0));
+      const q = input.value.toLowerCase().trim();
+      const filteredCount = q ? sortedGroups.filter(g=>(g.name||'').toLowerCase().includes(q)).length : sortedGroups.length;
+      const countSpan = sectionEl.querySelector('.group-mgmt-section-count');
+      if(countSpan) countSpan.textContent = q && filteredCount !== sortedGroups.length ? filteredCount+'/'+sortedGroups.length : sortedGroups.length;
+      // Vis/skjul tøm-knapp
+      const search = sectionEl.querySelector('.group-mgmt-search');
+      if(search){
+        let clearBtn = search.querySelector('[data-group-mgmt-search-clear]');
+        if(input.value && !clearBtn){
+          const btn = document.createElement('button');
+          btn.className = 'group-mgmt-search-clear';
+          btn.setAttribute('data-group-mgmt-search-clear', setNr);
+          btn.setAttribute('aria-label', 'Tøm');
+          btn.innerHTML = ICONS.x;
+          btn.addEventListener('click',(ev)=>{
+            ev.stopPropagation();
+            input.value = '';
+            if(setNr === 1) state.groupsSearch1 = '';
+            else state.groupsSearch2 = '';
+            render();
+          });
+          search.appendChild(btn);
+        } else if(!input.value && clearBtn){
+          clearBtn.remove();
+        }
+      }
+    });
+  });
+  document.querySelectorAll('[data-group-mgmt-search-clear]').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const setNr = parseInt(btn.dataset.groupMgmtSearchClear);
+      if(setNr === 1) state.groupsSearch1 = '';
+      else state.groupsSearch2 = '';
+      render();
+    });
+  });
+  wireGroupRowsIn(document);
+}
+
+function wireGroupRowsIn(scope){
+  // Ny gruppe
+  scope.querySelectorAll('[data-group-new]').forEach(b=>{
+    b.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const setNr = parseInt(b.dataset.groupNew);
+      const name = (prompt(`Navn på ny Gruppe ${setNr}:`) || '').trim();
+      if(!name) return;
+      const groupSet = setNr === 1 ? state.groups1 : state.groups2;
+      const usedColors = new Set(groupSet.map(g=>g.color));
+      let color = COLORS.find(c=>!usedColors.has(c));
+      if(!color) color = COLORS[groupSet.length % COLORS.length];
+      const newGroup = {
+        id: uid('g'),
+        name: name,
+        color: color,
+        order: groupSet.length ? Math.max(...groupSet.map(g=>g.order||0)) + 1 : 0
+      };
+      if(setNr === 1) state.groups1.push(newGroup);
+      else state.groups2.push(newGroup);
+      save(); render();
+      showToast(`Opprettet "${name}"`);
+    });
+  });
+  // Rediger gruppe (navn og farge)
+  scope.querySelectorAll('[data-group-edit]').forEach(b=>{
+    b.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id = b.dataset.groupEdit;
+      const setNr = parseInt(b.dataset.set);
+      const groupSet = setNr === 1 ? state.groups1 : state.groups2;
+      const g = groupSet.find(x=>x.id===id);
+      if(!g) return;
+      openGroupEditModal(g, setNr);
+    });
+  });
+  // Slett gruppe
+  scope.querySelectorAll('[data-group-delete]').forEach(b=>{
+    b.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id = b.dataset.groupDelete;
+      const setNr = parseInt(b.dataset.set);
+      const groupSet = setNr === 1 ? state.groups1 : state.groups2;
+      const g = groupSet.find(x=>x.id===id);
+      if(!g) return;
+      const taskGroupKey = setNr === 1 ? 'group1Id' : 'group2Id';
+      const affected = state.tasks.filter(t=>t[taskGroupKey]===id).length;
+      let msg = `Slette gruppen "${g.name}"?`;
+      if(affected > 0) msg += `\n\n${affected} ${affected===1?'oppgave':'oppgaver'} vil bli flyttet til "Uten gruppe".`;
+      if(!confirm(msg)) return;
+      // Fjern gruppe-tilknytning fra alle berørte oppgaver
+      state.tasks.forEach(t=>{ if(t[taskGroupKey]===id) t[taskGroupKey] = null; });
+      // Også deletedTasks
+      (state.deletedTasks||[]).forEach(t=>{ if(t[taskGroupKey]===id) t[taskGroupKey] = null; });
+      // Fjern gruppen
+      if(setNr === 1) state.groups1 = state.groups1.filter(x=>x.id!==id);
+      else state.groups2 = state.groups2.filter(x=>x.id!==id);
+      save(); render();
+      showToast(`Slettet "${g.name}"`);
+    });
+  });
+  // Drag-sortering av grupper
+  scope.querySelectorAll('[data-group-grip]').forEach(grip=>{
+    let dragState = null;
+    const startDrag = (clientX, clientY, isTouch) => {
+      const row = grip.closest('.group-mgmt-row');
+      if(!row) return;
+      const setNr = parseInt(grip.dataset.set);
+      const id = row.dataset.groupRow;
+      const rect = row.getBoundingClientRect();
+      const ghost = row.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.opacity = '0.85';
+      ghost.style.zIndex = '999';
+      ghost.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+      document.body.appendChild(ghost);
+      row.classList.add('sort-dragging');
+      if(isTouch && navigator.vibrate) navigator.vibrate(20);
+      dragState = { id, setNr, row, ghost, offsetY: clientY - rect.top, targetRow: null, insertBefore: false };
+    };
+    const moveDrag = (clientX, clientY) => {
+      if(!dragState) return;
+      dragState.ghost.style.top = (clientY - dragState.offsetY) + 'px';
+      dragState.ghost.style.display = 'none';
+      const under = document.elementFromPoint(clientX, clientY);
+      dragState.ghost.style.display = '';
+      scope.querySelectorAll('.group-mgmt-row.sort-target-above, .group-mgmt-row.sort-target-below').forEach(el=>{
+        el.classList.remove('sort-target-above','sort-target-below');
+      });
+      const targetRow = under ? under.closest('.group-mgmt-row') : null;
+      if(!targetRow || targetRow === dragState.row) { dragState.targetRow = null; return; }
+      // Bare sortere innenfor samme sett
+      if(parseInt(targetRow.dataset.set) !== dragState.setNr){ dragState.targetRow = null; return; }
+      const rect = targetRow.getBoundingClientRect();
+      const insertBefore = clientY < rect.top + rect.height / 2;
+      targetRow.classList.add(insertBefore ? 'sort-target-above' : 'sort-target-below');
+      dragState.targetRow = targetRow;
+      dragState.insertBefore = insertBefore;
+    };
+    const endDrag = () => {
+      if(!dragState) return;
+      const s = dragState;
+      if(s.ghost && s.ghost.parentNode) s.ghost.parentNode.removeChild(s.ghost);
+      s.row.classList.remove('sort-dragging');
+      scope.querySelectorAll('.group-mgmt-row.sort-target-above, .group-mgmt-row.sort-target-below').forEach(el=>{
+        el.classList.remove('sort-target-above','sort-target-below');
+      });
+      if(s.targetRow){
+        const groupSet = s.setNr === 1 ? state.groups1 : state.groups2;
+        const targetId = s.targetRow.dataset.groupRow;
+        // Bygg ny rekkefølge
+        const sorted = [...groupSet].sort((a,b)=>(a.order||0)-(b.order||0));
+        const filtered = sorted.filter(g=>g.id !== s.id);
+        const targetIdx = filtered.findIndex(g=>g.id === targetId);
+        if(targetIdx !== -1){
+          const insertAt = s.insertBefore ? targetIdx : targetIdx + 1;
+          const draggedGroup = groupSet.find(g=>g.id === s.id);
+          filtered.splice(insertAt, 0, draggedGroup);
+        }
+        filtered.forEach((g, i)=>{ g.order = i; });
+        save();
+      }
+      dragState = null;
+      render();
+    };
+    grip.addEventListener('mousedown',(e)=>{
+      e.preventDefault(); e.stopPropagation();
+      startDrag(e.clientX, e.clientY, false);
+      const onMove = (ev)=>moveDrag(ev.clientX, ev.clientY);
+      const onUp = ()=>{
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        endDrag();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+    grip.addEventListener('touchstart',(e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const t = e.touches[0];
+      startDrag(t.clientX, t.clientY, true);
+      const onMove = (ev)=>{
+        if(!ev.touches[0]) return;
+        ev.preventDefault();
+        moveDrag(ev.touches[0].clientX, ev.touches[0].clientY);
+      };
+      const onEnd = ()=>{
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+        endDrag();
+      };
+      document.addEventListener('touchmove', onMove, {passive:false});
+      document.addEventListener('touchend', onEnd, {passive:true});
+      document.addEventListener('touchcancel', onEnd, {passive:true});
+    }, {passive:false});
+  });
+}
+
+function openGroupEditModal(group, setNr){
+  const existing = document.getElementById('group-edit-modal');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'group-edit-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `<div class="modal-content" style="max-width:340px">
+    <div class="modal-header">
+      ${ICONS.edit}
+      <span class="modal-title">Rediger gruppe (Gruppe ${setNr})</span>
+      <button class="modal-close" data-modal-close>${ICONS.x}</button>
+    </div>
+    <div style="padding:12px">
+      <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">Navn</label>
+      <input type="text" id="ge-name" value="${escapeAttr(group.name)}" style="width:100%;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-radius:5px;padding:8px 10px;color:var(--text-primary);font-size:12px;font-family:inherit;margin-bottom:10px" />
+      <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">Farge</label>
+      <div class="color-palette">
+        ${COLORS.map(c=>`<button class="color-swatch ${c===group.color?'active':''}" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+      </div>
+    </div>
+    <div style="padding:8px 12px;border-top:0.5px solid var(--border-tertiary);display:flex;gap:6px">
+      <button class="fab-btn" id="ge-cancel" style="flex:1">Avbryt</button>
+      <button class="fab-btn primary" id="ge-save" style="flex:2">Lagre</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  let chosenColor = group.color;
+  modal.querySelectorAll('[data-color]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      chosenColor = b.dataset.color;
+      modal.querySelectorAll('[data-color]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+  modal.querySelector('#ge-save').addEventListener('click',()=>{
+    const newName = modal.querySelector('#ge-name').value.trim();
+    if(!newName){ showToast('Navn kan ikke være tomt'); return; }
+    group.name = newName;
+    group.color = chosenColor;
+    save(); modal.remove(); render();
+    showToast('Gruppe oppdatert');
+  });
+  const close = ()=>{ modal.remove(); };
+  modal.querySelector('#ge-cancel').addEventListener('click', close);
+  modal.querySelector('[data-modal-close]').addEventListener('click', close);
+  modal.addEventListener('click',(e)=>{ if(e.target === modal) close(); });
+  setTimeout(()=>modal.querySelector('#ge-name').focus(), 50);
+}
+
+function wireSms(){
+  // Søk
+  const searchInput = document.getElementById('sms-search');
+  if(searchInput){
+    searchInput.addEventListener('input',(e)=>{
+      state.smsSearch = e.target.value;
+      // Re-render kun cards
+      render();
+      // Behold fokus
+      setTimeout(()=>{
+        const s = document.getElementById('sms-search');
+        if(s){ s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+      }, 0);
+    });
+  }
+  // Ny SMS-knapp
+  const newBtn = document.getElementById('sms-new-btn');
+  if(newBtn) newBtn.addEventListener('click',()=>{
+    state.smsForm = { name:'', phone:'', body:'', taskId:'', editingId:null, _editing:true };
+    save(); render();
+  });
+  // Klikk på utkast → rediger
+  document.querySelectorAll('[data-sms-edit]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      // Ikke trigger på action-knapper
+      if(e.target.closest('.sms-draft-actions')) return;
+      const id = el.dataset.smsEdit;
+      const d = state.smsDrafts.find(x=>x.id===id);
+      if(!d) return;
+      state.smsForm = { name:d.name||'', phone:d.phone||'', body:d.body||'', taskId:d.taskId||'', editingId:d.id, _editing:true };
+      save(); render();
+    });
+  });
+  // Kopier
+  document.querySelectorAll('[data-sms-copy]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id = el.dataset.smsCopy;
+      const d = state.smsDrafts.find(x=>x.id===id);
+      if(!d || !d.body){ showToast('Tomt meldingsfelt'); return; }
+      copyToClipboard(d.body);
+    });
+  });
+  // Send (åpne Meldinger)
+  document.querySelectorAll('[data-sms-send]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id = el.dataset.smsSend;
+      const d = state.smsDrafts.find(x=>x.id===id);
+      if(!d){ return; }
+      sendSmsViaMeldinger(d);
+    });
+  });
+  // Slett utkast
+  document.querySelectorAll('[data-sms-delete]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id = el.dataset.smsDelete;
+      const d = state.smsDrafts.find(x=>x.id===id);
+      if(!d) return;
+      if(!confirm(`Slette SMS-utkast til ${d.name||'Uten navn'}?`)) return;
+      state.smsDrafts = state.smsDrafts.filter(x=>x.id!==id);
+      save(); render();
+      showToast('Utkast slettet');
+    });
+  });
+
+  // SKJEMA-handlers (når man er i edit-modus)
+  const nameInp = document.getElementById('sms-name');
+  const phoneInp = document.getElementById('sms-phone');
+  const bodyInp = document.getElementById('sms-body');
+  const charSpan = document.getElementById('sms-char');
+  if(nameInp) nameInp.addEventListener('input',e=>{ state.smsForm.name = e.target.value; save(); });
+  if(phoneInp) phoneInp.addEventListener('input',e=>{ state.smsForm.phone = e.target.value; save(); });
+  if(bodyInp){
+    bodyInp.addEventListener('input',e=>{
+      state.smsForm.body = e.target.value;
+      if(charSpan) charSpan.textContent = e.target.value.length;
+      // Oppdater tegn-teller class
+      const cnt = e.target.value.length;
+      const wrap = charSpan ? charSpan.parentElement : null;
+      if(wrap){
+        wrap.classList.remove('warn','over');
+        if(cnt > 160) wrap.classList.add('over');
+        else if(cnt > 160*0.85) wrap.classList.add('warn');
+      }
+      autoResizeTextarea(bodyInp);
+      save();
+    });
+    setTimeout(()=>autoResizeTextarea(bodyInp), 0);
+  }
+  // Maler – klikk for å sette inn
+  document.querySelectorAll('[data-sms-tpl]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const tpl = state.smsTemplates.find(t=>t.id===b.dataset.smsTpl);
+      if(!tpl) return;
+      if(bodyInp){
+        // Sett inn malen (overskriv hvis tomt, ellers legg til på slutten)
+        if(bodyInp.value.trim()){
+          if(!confirm('Erstatte gjeldende tekst med malen?')) return;
+        }
+        bodyInp.value = tpl.body;
+        state.smsForm.body = tpl.body;
+        if(charSpan) charSpan.textContent = tpl.body.length;
+        autoResizeTextarea(bodyInp);
+        save();
+      }
+    });
+  });
+  // Lag ny mal
+  const newTplBtn = document.getElementById('sms-new-tpl');
+  if(newTplBtn) newTplBtn.addEventListener('click',()=>{
+    if(!state.smsForm.body || !state.smsForm.body.trim()){
+      showToast('Skriv meldingstekst først');
+      return;
+    }
+    const name = (prompt('Navn på mal (inkluder gjerne emoji):', '✏️ Min mal') || '').trim();
+    if(!name) return;
+    state.smsTemplates.push({
+      id: uid('tpl'),
+      name: name,
+      body: state.smsForm.body
+    });
+    save(); render();
+    showToast(`Mal "${name}" lagret`);
+  });
+  // Fjern oppgave-kobling
+  const unlinkTaskBtn = document.getElementById('sms-unlink-task');
+  if(unlinkTaskBtn) unlinkTaskBtn.addEventListener('click',()=>{
+    state.smsForm.taskId = '';
+    save(); render();
+  });
+  // Avbryt
+  const cancelBtn = document.getElementById('sms-cancel');
+  if(cancelBtn) cancelBtn.addEventListener('click',()=>{
+    state.smsForm = { name:'', phone:'', body:'', taskId:'', editingId:null };
+    if(state.returnView === 'form'){ state.view = 'form'; state.returnView = null; }
+    save(); render();
+  });
+  // Lagre utkast
+  const saveBtn = document.getElementById('sms-save');
+  if(saveBtn) saveBtn.addEventListener('click',()=>{
+    const f = state.smsForm;
+    if(!f.name && !f.phone && !f.body){ showToast('Tomt utkast – ingenting å lagre'); return; }
+    if(f.editingId){
+      const d = state.smsDrafts.find(x=>x.id===f.editingId);
+      if(d){
+        d.name = f.name; d.phone = f.phone; d.body = f.body; d.taskId = f.taskId;
+        d.updatedAt = new Date().toISOString();
+      }
+      showToast('Utkast oppdatert');
+    } else {
+      const newDraft = {
+        id: uid('sms'),
+        name: f.name, phone: f.phone, body: f.body, taskId: f.taskId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sentAt: null
+      };
+      state.smsDrafts.push(newDraft);
+      showToast('Utkast lagret');
+    }
+    state.smsForm = { name:'', phone:'', body:'', taskId:'', editingId:null };
+    if(state.returnView === 'form'){ state.view = 'form'; state.returnView = null; }
+    save(); render();
+  });
+  // Kopier-knapp
+  const copyBtn = document.getElementById('sms-copy');
+  if(copyBtn) copyBtn.addEventListener('click',()=>{
+    if(!state.smsForm.body){ showToast('Tomt meldingsfelt'); return; }
+    copyToClipboard(state.smsForm.body);
+  });
+  // Send via Meldinger
+  const sendBtn = document.getElementById('sms-send-now');
+  if(sendBtn) sendBtn.addEventListener('click',()=>{
+    sendSmsViaMeldinger(state.smsForm);
+    // Lagre som sendt
+    if(state.smsForm.editingId){
+      const d = state.smsDrafts.find(x=>x.id===state.smsForm.editingId);
+      if(d){ d.sentAt = new Date().toISOString(); }
+    } else if(state.smsForm.body){
+      // Auto-lagre som sendt
+      state.smsDrafts.push({
+        id: uid('sms'),
+        name: state.smsForm.name, phone: state.smsForm.phone,
+        body: state.smsForm.body, taskId: state.smsForm.taskId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sentAt: new Date().toISOString()
+      });
+    }
+    state.smsForm = { name:'', phone:'', body:'', taskId:'', editingId:null };
+    save();
+    setTimeout(()=>render(), 100);
+  });
+}
+
+function sendSmsViaMeldinger(draft){
+  if(!draft || !draft.body){ showToast('Meldingsteksten er tom'); return; }
+  // iOS bruker & som separator, Android bruker ?body=. Vi prøver iOS-formatet siden brukeren har iPhone.
+  let phone = (draft.phone||'').replace(/[\s()\-]/g, '');
+  let url;
+  if(phone){
+    url = `sms:${phone}&body=${encodeURIComponent(draft.body)}`;
+  } else {
+    // Uten nummer – bare åpne Meldinger med tekst
+    url = `sms:&body=${encodeURIComponent(draft.body)}`;
+  }
+  // Kopier også til utklippstavlen som backup
+  copyToClipboard(draft.body, 'Kopiert. Åpner Meldinger...');
+  setTimeout(()=>{ window.location.href = url; }, 200);
+}
+
+function copyToClipboard(text, customMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast(customMsg || 'Kopiert til utklippstavlen');
+    }).catch(()=>{
+      fallbackCopy(text, customMsg);
+    });
+  } else {
+    fallbackCopy(text, customMsg);
+  }
+}
+
+function fallbackCopy(text, customMsg){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast(customMsg || 'Kopiert'); } catch(e){ showToast('Kunne ikke kopiere'); }
+  document.body.removeChild(ta);
 }
 
 function wireNotes(){
@@ -3559,21 +4696,309 @@ function wireNotes(){
   });
 }
 
+function htmlToMarkdown(html){
+  if(!html) return '';
+  // Bruk en midlertidig DOM
+  const div = document.createElement('div');
+  div.innerHTML = html;
+
+  const walk = (node) => {
+    if(node.nodeType === 3) return node.textContent; // tekst
+    if(node.nodeType !== 1) return '';
+    const tag = node.tagName.toLowerCase();
+    const inner = Array.from(node.childNodes).map(walk).join('');
+    switch(tag){
+      case 'strong': case 'b': return '**' + inner + '**';
+      case 'em': case 'i': return '*' + inner + '*';
+      case 'del': case 's': case 'strike': return '~~' + inner + '~~';
+      case 'code': return '`' + inner + '`';
+      case 'h1': return '\n# ' + inner + '\n';
+      case 'h2': return '\n## ' + inner + '\n';
+      case 'h3': return '\n### ' + inner + '\n';
+      case 'br': return '\n';
+      case 'p': case 'div': return inner + '\n';
+      case 'blockquote': return '\n> ' + inner.trim().split('\n').join('\n> ') + '\n';
+      case 'ul': {
+        const items = Array.from(node.children).filter(c=>c.tagName.toLowerCase()==='li');
+        return '\n' + items.map(li => {
+          // Sjekk om dette er en task-item
+          const cb = li.querySelector('input[type="checkbox"]');
+          if(cb){
+            const checked = cb.checked ? 'x' : ' ';
+            const text = walk(li).replace(/^\s*/,'').replace(/^\[[ x]\]\s*/i,'').trim();
+            return `- [${checked}] ${text}`;
+          }
+          return '- ' + walk(li).trim();
+        }).join('\n') + '\n';
+      }
+      case 'ol': {
+        const items = Array.from(node.children).filter(c=>c.tagName.toLowerCase()==='li');
+        return '\n' + items.map((li, i) => (i+1) + '. ' + walk(li).trim()).join('\n') + '\n';
+      }
+      case 'a': {
+        const href = node.getAttribute('href') || '';
+        return '[' + inner + '](' + href + ')';
+      }
+      case 'pre': return '\n```\n' + inner + '\n```\n';
+      case 'hr': return '\n---\n';
+      default: return inner;
+    }
+  };
+
+  let md = walk(div);
+  // Rydde i overflødige tomme linjer
+  md = md.replace(/\n{3,}/g, '\n\n').trim();
+  return md;
+}
+
+function initRichEditor(editorId, getCurrentValue, onChange){
+  const editor = document.getElementById(editorId);
+  if(!editor) return;
+  const toolbar = document.querySelector(`[data-rich-toolbar="${editorId}"]`);
+
+  const syncToMarkdown = () => {
+    const md = htmlToMarkdown(editor.innerHTML);
+    onChange(md);
+  };
+
+  // Innhold endrer seg → konverter til markdown og lagre
+  editor.addEventListener('input', syncToMarkdown);
+  editor.addEventListener('blur', syncToMarkdown);
+
+  // Tomt-tilstand for placeholder
+  const updateEmptyState = () => {
+    const text = editor.textContent.replace(/\s/g, '');
+    if(!text && !editor.innerHTML.includes('<')){
+      editor.classList.add('rich-editor-empty');
+    } else {
+      editor.classList.remove('rich-editor-empty');
+    }
+  };
+  updateEmptyState();
+  editor.addEventListener('input', updateEmptyState);
+
+  // Tastatursnarveier
+  editor.addEventListener('keydown', (e) => {
+    if((e.metaKey || e.ctrlKey) && !e.shiftKey){
+      if(e.key === 'b'){ e.preventDefault(); document.execCommand('bold'); syncToMarkdown(); }
+      else if(e.key === 'i'){ e.preventDefault(); document.execCommand('italic'); syncToMarkdown(); }
+    }
+  });
+
+  if(!toolbar) return;
+  toolbar.querySelectorAll('[data-rich]').forEach(btn=>{
+    btn.addEventListener('mousedown', e=>e.preventDefault()); // forhindrer at editor mister fokus
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      editor.focus();
+      const action = btn.dataset.rich;
+      switch(action){
+        case 'bold': document.execCommand('bold'); break;
+        case 'italic': document.execCommand('italic'); break;
+        case 'strike': document.execCommand('strikeThrough'); break;
+        case 'code': {
+          const sel = window.getSelection();
+          if(sel.rangeCount){
+            const range = sel.getRangeAt(0);
+            const code = document.createElement('code');
+            try {
+              range.surroundContents(code);
+            } catch(err){
+              const text = range.toString();
+              code.textContent = text || 'kode';
+              range.deleteContents();
+              range.insertNode(code);
+            }
+          }
+          break;
+        }
+        case 'h2': document.execCommand('formatBlock', false, 'h2'); break;
+        case 'h1': document.execCommand('formatBlock', false, 'h1'); break;
+        case 'h3': document.execCommand('formatBlock', false, 'h3'); break;
+        case 'ul': document.execCommand('insertUnorderedList'); break;
+        case 'ol': document.execCommand('insertOrderedList'); break;
+        case 'quote': document.execCommand('formatBlock', false, 'blockquote'); break;
+        case 'task': {
+          // Sjekkliste – sett inn som en spesial-li
+          const sel = window.getSelection();
+          if(sel.rangeCount){
+            const range = sel.getRangeAt(0);
+            const html = '<ul><li><input type="checkbox" disabled> ' + (range.toString() || 'oppgave') + '</li></ul>';
+            document.execCommand('insertHTML', false, html);
+          }
+          break;
+        }
+        case 'link': {
+          const url = prompt('URL:', 'https://');
+          if(url) document.execCommand('createLink', false, url);
+          break;
+        }
+      }
+      syncToMarkdown();
+      updateEmptyState();
+      updateActiveButtons();
+    });
+  });
+
+  // Marker aktive knapper (bold/italic) basert på markøren
+  const updateActiveButtons = () => {
+    if(!toolbar) return;
+    toolbar.querySelectorAll('[data-rich]').forEach(btn=>{
+      const action = btn.dataset.rich;
+      let active = false;
+      try {
+        if(action === 'bold') active = document.queryCommandState('bold');
+        else if(action === 'italic') active = document.queryCommandState('italic');
+        else if(action === 'strike') active = document.queryCommandState('strikeThrough');
+      } catch(e){}
+      btn.classList.toggle('active', active);
+    });
+  };
+  editor.addEventListener('keyup', updateActiveButtons);
+  editor.addEventListener('mouseup', updateActiveButtons);
+}
+
+function applyMarkdownTo(textarea, action, onChange){
+  if(!textarea) return;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const selected = text.substring(start, end);
+  let before = '', after = '', newText = selected || 'tekst', blockMode = false, prefix = '';
+  switch(action){
+    case 'bold': before = '**'; after = '**'; break;
+    case 'italic': before = '*'; after = '*'; break;
+    case 'strike': before = '~~'; after = '~~'; break;
+    case 'code': before = '`'; after = '`'; break;
+    case 'h1': prefix = '# '; blockMode = true; break;
+    case 'h2': prefix = '## '; blockMode = true; break;
+    case 'h3': prefix = '### '; blockMode = true; break;
+    case 'ul': prefix = '- '; blockMode = true; break;
+    case 'ol': prefix = '1. '; blockMode = true; break;
+    case 'task': prefix = '- [ ] '; blockMode = true; break;
+    case 'quote': prefix = '> '; blockMode = true; break;
+    case 'link': before = '['; after = '](url)'; if(!selected) newText = 'tekst'; break;
+    case 'hr':
+      textarea.value = text.substring(0,start) + '\n\n---\n\n' + text.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(start+7, start+7);
+      if(onChange) onChange(textarea.value);
+      return;
+  }
+  let result, newStart, newEnd;
+  if(blockMode){
+    let lineStart = start;
+    while(lineStart > 0 && text[lineStart-1] !== '\n') lineStart--;
+    const lineEnd = text.indexOf('\n', end);
+    const finalEnd = lineEnd === -1 ? text.length : lineEnd;
+    const lines = text.substring(lineStart, finalEnd).split('\n');
+    const newLines = lines.map((line, i) => {
+      if(action === 'ol') return (i+1) + '. ' + line.replace(/^\d+\.\s+/, '').replace(/^[-*]\s+/, '').replace(/^#+\s+/, '').replace(/^>\s+/, '');
+      return prefix + line.replace(/^\d+\.\s+/, '').replace(/^[-*]\s+(\[[ x]\]\s+)?/, '').replace(/^#+\s+/, '').replace(/^>\s+/, '');
+    });
+    result = text.substring(0, lineStart) + newLines.join('\n') + text.substring(finalEnd);
+    newStart = lineStart;
+    newEnd = lineStart + newLines.join('\n').length;
+  } else {
+    result = text.substring(0, start) + before + newText + after + text.substring(end);
+    newStart = start + before.length;
+    newEnd = newStart + newText.length;
+  }
+  textarea.value = result;
+  textarea.focus();
+  textarea.setSelectionRange(newStart, newEnd);
+  if(onChange) onChange(textarea.value);
+}
+
+function markdownToHtml(md){
+  if(!md) return '';
+  let html = escapeHtml(md);
+  // Block-elementer (linjebasert)
+  const lines = html.split('\n');
+  const out = [];
+  let inUL = false, inOL = false, inQuote = false, inCode = false;
+  const closeBlocks = () => {
+    if(inUL){ out.push('</ul>'); inUL = false; }
+    if(inOL){ out.push('</ol>'); inOL = false; }
+    if(inQuote){ out.push('</blockquote>'); inQuote = false; }
+  };
+  for(let i=0; i<lines.length; i++){
+    const line = lines[i];
+    // Kodeblokk
+    if(line.trim().startsWith('```')){
+      if(inCode){ out.push('</code></pre>'); inCode = false; }
+      else { closeBlocks(); out.push('<pre><code>'); inCode = true; }
+      continue;
+    }
+    if(inCode){ out.push(line); continue; }
+    // Skillelinje
+    if(/^[-*_]{3,}\s*$/.test(line)){ closeBlocks(); out.push('<hr>'); continue; }
+    // Overskrifter
+    const h = line.match(/^(#{1,6})\s+(.+)$/);
+    if(h){ closeBlocks(); const n = h[1].length; out.push(`<h${n}>${h[2]}</h${n}>`); continue; }
+    // Sjekkliste
+    const task = line.match(/^[-*]\s+\[([ x])\]\s+(.+)$/i);
+    if(task){
+      closeBlocks();
+      const checked = task[1].toLowerCase() === 'x' ? 'checked' : '';
+      out.push(`<div class="task-item"><input type="checkbox" disabled ${checked}><span>${task[2]}</span></div>`);
+      continue;
+    }
+    // Punktliste
+    const ul = line.match(/^[-*]\s+(.+)$/);
+    if(ul){
+      if(!inUL){ closeBlocks(); out.push('<ul>'); inUL = true; }
+      out.push(`<li>${ul[1]}</li>`);
+      continue;
+    }
+    // Nummerert liste
+    const ol = line.match(/^\d+\.\s+(.+)$/);
+    if(ol){
+      if(!inOL){ closeBlocks(); out.push('<ol>'); inOL = true; }
+      out.push(`<li>${ol[1]}</li>`);
+      continue;
+    }
+    // Sitat
+    const q = line.match(/^&gt;\s+(.+)$/);
+    if(q){
+      if(!inQuote){ closeBlocks(); out.push('<blockquote>'); inQuote = true; }
+      out.push(`<p>${q[1]}</p>`);
+      continue;
+    }
+    closeBlocks();
+    if(line.trim()) out.push(`<p>${line}</p>`);
+    else out.push('');
+  }
+  closeBlocks();
+  if(inCode) out.push('</code></pre>');
+  html = out.join('\n');
+  // Inline-formattering
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+  html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  // Lenker [tekst](url)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return html;
+}
+
 function wireNoteForm(){
   const ti = document.getElementById('nf-title');
   const de = document.getElementById('nf-desc');
-  const bo = document.getElementById('nf-body');
   const da = document.getElementById('nf-date');
   if(ti) ti.addEventListener('input',e=>{state.noteForm.title=e.target.value; save();});
   if(de){
     de.addEventListener('input',e=>{state.noteForm.description=e.target.value; autoResizeTextarea(de); save();});
     setTimeout(()=>autoResizeTextarea(de), 0);
   }
-  if(bo){
-    bo.addEventListener('input',e=>{state.noteForm.body=e.target.value; autoResizeTextarea(bo); save();});
-    setTimeout(()=>autoResizeTextarea(bo), 0);
-  }
   if(da) da.addEventListener('input',e=>{state.noteForm.date=e.target.value; save();});
+
+  // Rich-editor for notat-body (WYSIWYG)
+  initRichEditor('nf-body-rich', () => state.noteForm.body, (md) => {
+    state.noteForm.body = md;
+    save();
+  });
+
   document.getElementById('nf-cancel').addEventListener('click',()=>{
     state.view='notes';
     state.noteForm={title:'',description:'',body:'',date:todayISO(),editingId:null};
@@ -3582,7 +5007,6 @@ function wireNoteForm(){
   document.getElementById('nf-save').addEventListener('click',()=>{
     if(ti) state.noteForm.title=ti.value;
     if(de) state.noteForm.description=de.value;
-    if(bo) state.noteForm.body=bo.value;
     if(da) state.noteForm.date=da.value;
     if(!state.noteForm.title.trim() && !state.noteForm.body.trim()){
       showToast('Skriv inn tittel eller notat'); return;
@@ -4197,6 +5621,12 @@ function wireForm(){
     state.form.todayFlag = !state.form.todayFlag;
     save(); render();
   });
+  const waitBtn = document.getElementById('f-toggle-wait');
+  if(waitBtn) waitBtn.addEventListener('click',()=>{
+    syncFormInputs();
+    state.form.waitFlag = !state.form.waitFlag;
+    save(); render();
+  });
   document.querySelectorAll('[data-set-category]').forEach(b=>{
     b.addEventListener('click',()=>{
       syncFormInputs();
@@ -4226,39 +5656,42 @@ function wireForm(){
     save();
   });
 
-  // Gruppe-s\u00f8k filtrerer options i rullegardin
+  // Gruppe-søk filtrerer options i rullegardin
+  // iOS Safari respekterer ikke option.hidden i alle versjoner, så vi re-bygger select-innholdet
   document.querySelectorAll('.group-search-input').forEach(input=>{
     input.addEventListener('input',(e)=>{
       const setNr = e.target.dataset.groupSearch;
       const q = e.target.value.trim().toLowerCase();
       const select = document.getElementById(setNr==='2' ? 'f-group2' : 'f-group1');
       if(!select) return;
-      let visibleCount = 0;
-      let firstMatch = null;
-      Array.from(select.options).forEach(opt=>{
-        const name = opt.dataset.groupName || '';
-        const isNone = opt.value === '';
-        let show;
-        if(!q){ show = true; }
-        else if(isNone){ show = false; }
-        else { show = name.includes(q); }
-        opt.hidden = !show;
-        opt.disabled = !show;
-        if(show){
-          visibleCount++;
-          if(!firstMatch && !isNone) firstMatch = opt;
-        }
+      const groupSet = setNr === '2' ? state.groups2 : state.groups1;
+      const sorted = [...groupSet].sort((a,b)=>(a.order||0)-(b.order||0));
+      const currentValue = select.value;
+      // Filtrer grupper basert på søk
+      const matched = q
+        ? sorted.filter(g => (g.name||'').toLowerCase().includes(q))
+        : sorted;
+      // Bygg ny options-liste
+      let html = q ? '' : '<option value="">Uten gruppe</option>';
+      matched.forEach(g=>{
+        const sel = g.id === currentValue ? 'selected' : '';
+        html += `<option value="${g.id}" data-group-name="${escapeAttr((g.name||'').toLowerCase())}" ${sel}>${escapeHtml(g.name)}</option>`;
       });
-      // Hvis aktivt valg er skjult og det er treff, foresl\u00e5 f\u00f8rste
-      if(q && firstMatch && select.options[select.selectedIndex] && select.options[select.selectedIndex].hidden){
-        select.value = firstMatch.value;
-        const event = new Event('change', {bubbles:true});
-        select.dispatchEvent(event);
+      if(!matched.length && q){
+        html = `<option value="" disabled selected>Ingen treff</option>`;
+      }
+      select.innerHTML = html;
+      // Hvis nåværende valg ikke lenger er synlig, velg første match
+      if(q && matched.length && !matched.find(g=>g.id===currentValue)){
+        select.value = matched[0].id;
+        const setKey = setNr === '2' ? 'group2Id' : 'group1Id';
+        state.form[setKey] = matched[0].id;
+        save();
       }
     });
   });
 
-  // Bilde-h\u00e5ndtering
+  // Bilde-håndtering
   const handleImageFiles = async (files) => {
     if(!files.length) return;
     syncFormInputs();
@@ -4404,12 +5837,135 @@ function wireForm(){
   });
   const ng1=document.getElementById('f-new-group1'); if(ng1) ng1.addEventListener('click',()=>openGroupModal(1));
   const ng2=document.getElementById('f-new-group2'); if(ng2) ng2.addEventListener('click',()=>openGroupModal(2));
+
+  // SMS-knapp ved kontaktfeltet → opprett SMS-utkast
+  const smsBtn = document.getElementById('f-sms-btn');
+  if(smsBtn) smsBtn.addEventListener('click',(e)=>{
+    e.preventDefault();
+    syncFormInputs();
+    // Hent kontaktnavn (før " | " hvis det finnes)
+    const contact = (state.form.contact||'').trim();
+    const name = contact.split(/\s*\|\s*/)[0] || '';
+    const taskId = state.form.editingId || '';
+    state.smsForm = { name: name, phone:'', body:'', taskId: taskId, editingId:null, _editing:true };
+    state.view = 'sms';
+    state.returnView = 'form';
+    save(); render();
+  });
+
+  // Rich-editor for f-notes (WYSIWYG)
+  initRichEditor('f-notes-rich', () => state.form.notes, (md) => {
+    state.form.notes = md;
+    save();
+  });
+  // Tilkoblet notat (inline)
+  const attachBtn = document.getElementById('f-attach-note');
+  const changeBtn = document.getElementById('f-change-note');
+  const unlinkInlineBtn = document.getElementById('f-unlink-note-inline');
+  const openNotePicker = (anchor) => {
+    openNoteAttachmentPicker(anchor);
+  };
+  if(attachBtn) attachBtn.addEventListener('click',(e)=>{ e.stopPropagation(); openNotePicker(attachBtn); });
+  if(changeBtn) changeBtn.addEventListener('click',(e)=>{ e.stopPropagation(); openNotePicker(changeBtn); });
+  if(unlinkInlineBtn){
+    unlinkInlineBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      syncFormInputs();
+      state.form.noteId = '';
+      save(); render();
+      showToast('Notat-kobling fjernet');
+    });
+  }
+  // Tilkoblet notat
+  document.querySelectorAll('[data-form-group-picker]').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const setNr = parseInt(btn.dataset.formGroupPicker);
+      openFormGroupPicker(setNr, btn);
+    });
+  });
+  const fNoteSearch = document.getElementById('f-note-search');
+  const fNoteResults = document.getElementById('f-note-results');
+  const renderNoteResults = (query) => {
+    if(!fNoteResults) return;
+    const q = (query||'').toLowerCase().trim();
+    let notes = state.notes;
+    if(q) notes = notes.filter(n=>(n.title||'').toLowerCase().includes(q) || (n.description||'').toLowerCase().includes(q) || (n.body||'').toLowerCase().includes(q));
+    notes = notes.slice(0, 8);
+    if(!notes.length){
+      fNoteResults.innerHTML = q ? `<div class="linked-note-empty-msg">Ingen treff for "${escapeHtml(q)}"</div>` : `<div class="linked-note-empty-msg">Ingen notater enda. Trykk "Opprett nytt notat" nedenfor.</div>`;
+      return;
+    }
+    fNoteResults.innerHTML = notes.map(n=>`<div class="linked-note-result" data-link-note="${n.id}">
+      <div class="linked-note-title">${escapeHtml(n.title || 'Uten tittel')}</div>
+      ${n.description ? `<div class="linked-note-desc">${escapeHtml(n.description)}</div>` : ''}
+    </div>`).join('');
+    fNoteResults.querySelectorAll('[data-link-note]').forEach(el=>{
+      el.addEventListener('click',()=>{
+        syncFormInputs();
+        state.form.noteId = el.dataset.linkNote;
+        save(); render();
+        showToast('Notat tilkoblet');
+      });
+    });
+  };
+  if(fNoteSearch){
+    fNoteSearch.addEventListener('input',(e)=>renderNoteResults(e.target.value));
+    renderNoteResults('');
+  }
+  const fNewNote = document.getElementById('f-new-note');
+  if(fNewNote){
+    fNewNote.addEventListener('click',()=>{
+      syncFormInputs();
+      const title = (state.form.title || '').trim();
+      const newNote = {
+        id: uid('n'),
+        title: title || 'Nytt notat',
+        description: '',
+        body: '',
+        date: todayISO(),
+        createdAt: new Date().toISOString()
+      };
+      state.notes.push(newNote);
+      state.form.noteId = newNote.id;
+      save(); render();
+      showToast('Nytt notat opprettet og koblet til');
+    });
+  }
+  const fUnlink = document.getElementById('f-unlink-note');
+  if(fUnlink){
+    fUnlink.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      syncFormInputs();
+      state.form.noteId = '';
+      save(); render();
+      showToast('Notat-kobling fjernet');
+    });
+  }
+  document.querySelectorAll('[data-open-linked-note]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      // Ikke hvis klikk var på unlink-knappen
+      if(e.target.closest('#f-unlink-note')) return;
+      const id = el.dataset.openLinkedNote;
+      const n = state.notes.find(x=>x.id===id);
+      if(!n) return;
+      syncFormInputs();
+      state.noteForm = {
+        title:n.title||'', description:n.description||'', body:n.body||'',
+        date:n.date||todayISO(), editingId:n.id
+      };
+      state.returnView = 'form';
+      state.view = 'noteForm';
+      save(); render();
+    });
+  });
+
   const fCancelBtn = document.getElementById('f-cancel-top');
   if(fCancelBtn) fCancelBtn.addEventListener('click',()=>{
     const ret = state.returnView || 'today';
     state.view = ret;
     state.returnView = null;
-    state.form={title:'',notes:'',subtasks:[],priority:'med',date:todayISO(),futureDate:'',group1Id:'',group2Id:'',www:'',contact:'',images:[],pinned:false,iphoneFlag:false,todayFlag:false,category:'none',activeTab:'title',editingId:null,mode:'notes'};
+    state.form={title:'',notes:'',subtasks:[],priority:'med',date:todayISO(),futureDate:'',group1Id:'',group2Id:'',www:'',contact:'',images:[],pinned:false,iphoneFlag:false,todayFlag:false,category:'none',waitFlag:false,noteId:'',activeTab:'title',editingId:null,mode:'notes'};
     save(); render();
   });
   document.getElementById('f-save-top').addEventListener('click',()=>{
@@ -4433,6 +5989,8 @@ function wireForm(){
       pinned:!!state.form.pinned,
       iphoneFlag:!!state.form.iphoneFlag,
       todayFlag:!!state.form.todayFlag,
+      waitFlag:!!state.form.waitFlag,
+      noteId:state.form.noteId||'',
       category:state.form.category||'none'
     };
     try {
@@ -4445,7 +6003,7 @@ function wireForm(){
         state.nextTaskNumber++;
         showToast('Lagt til');
       }
-      state.form={title:'',notes:'',subtasks:[],priority:'med',date:todayISO(),futureDate:'',group1Id:'',group2Id:'',www:'',contact:'',images:[],pinned:false,iphoneFlag:false,todayFlag:false,category:'none',activeTab:'title',editingId:null,mode:'notes'};
+      state.form={title:'',notes:'',subtasks:[],priority:'med',date:todayISO(),futureDate:'',group1Id:'',group2Id:'',www:'',contact:'',images:[],pinned:false,iphoneFlag:false,todayFlag:false,category:'none',waitFlag:false,noteId:'',activeTab:'title',editingId:null,mode:'notes'};
       const ret = state.returnView || 'today';
       state.view = ret;
       state.returnView = null;
@@ -4905,6 +6463,8 @@ function openExportModal(){
           pinned: !!(t.pinned),
           iphoneFlag: !!(t.iphone_flag || t.iphoneFlag),
           todayFlag: !!(t.today_flag || t.todayFlag),
+          waitFlag: !!(t.wait_flag || t.waitFlag),
+          noteId: t.note_id || t.noteId || '',
           category: ['none','urgent','a','b','c'].includes(t.category) ? t.category : 'none',
           order: typeof t.order === 'number' ? t.order : 0,
           number: typeof t.number === 'number' ? t.number : null,
@@ -4921,6 +6481,8 @@ function openExportModal(){
           pinned: !!(t.pinned),
           iphoneFlag: !!(t.iphone_flag || t.iphoneFlag),
           todayFlag: !!(t.today_flag || t.todayFlag),
+          waitFlag: !!(t.wait_flag || t.waitFlag),
+          noteId: t.note_id || t.noteId || '',
           category: ['none','urgent','a','b','c'].includes(t.category) ? t.category : 'none',
           order: typeof t.order === 'number' ? t.order : 0,
           number: typeof t.number === 'number' ? t.number : null,
@@ -5131,7 +6693,9 @@ function exportJSON(){
       pinned: !!t.pinned, order: t.order||0,
       iphone_flag: !!t.iphoneFlag,
       today_flag: !!t.todayFlag,
+      wait_flag: !!t.waitFlag,
       category: t.category || 'none',
+      note_id: t.noteId || null,
       number: typeof t.number === 'number' ? t.number : null,
       group1_id:t.group1Id||null, group1_name: getGroup1(t.group1Id)?.name || null,
       group2_id:t.group2Id||null, group2_name: getGroup2(t.group2Id)?.name || null
@@ -5146,7 +6710,9 @@ function exportJSON(){
       pinned: !!t.pinned, order: t.order||0,
       iphone_flag: !!t.iphoneFlag,
       today_flag: !!t.todayFlag,
+      wait_flag: !!t.waitFlag,
       category: t.category || 'none',
+      note_id: t.noteId || null,
       number: typeof t.number === 'number' ? t.number : null,
       group1_id:t.group1Id||null, group2_id:t.group2Id||null,
       deleted_at: t.deletedAt||null
@@ -5158,10 +6724,10 @@ function exportJSON(){
 
 function exportCSVTasks(){
   const esc = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows = [['id','number','title','notes','subtasks','priority','due_date','future_date','www','contact','image_count','pinned','iphone_flag','today_flag','category','order','completed','completed_at','group1_id','group1_name','group2_id','group2_name']];
+  const rows = [['id','number','title','notes','subtasks','priority','due_date','future_date','www','contact','image_count','pinned','iphone_flag','today_flag','wait_flag','category','order','completed','completed_at','group1_id','group1_name','group2_id','group2_name']];
   state.tasks.forEach(t=>{
     const subs = (t.subtasks||[]).map(s=>(s.done?'[x] ':'[ ] ')+s.text).join(' | ');
-    rows.push([t.id,t.number||'',t.title,t.notes||'',subs,t.priority,t.date||'',t.futureDate||'',t.www||'',t.contact||'',(t.images||[]).length,t.pinned?'true':'false',t.iphoneFlag?'true':'false',t.todayFlag?'true':'false',t.category||'none',t.order||0,t.done?'true':'false',t.completedAt||'',t.group1Id||'',getGroup1(t.group1Id)?.name||'',t.group2Id||'',getGroup2(t.group2Id)?.name||'']);
+    rows.push([t.id,t.number||'',t.title,t.notes||'',subs,t.priority,t.date||'',t.futureDate||'',t.www||'',t.contact||'',(t.images||[]).length,t.pinned?'true':'false',t.iphoneFlag?'true':'false',t.todayFlag?'true':'false',t.waitFlag?'true':'false',t.category||'none',t.order||0,t.done?'true':'false',t.completedAt||'',t.group1Id||'',getGroup1(t.group1Id)?.name||'',t.group2Id||'',getGroup2(t.group2Id)?.name||'']);
   });
   const csv = rows.map(r=>r.map(esc).join(',')).join('\n');
   download('oppgaver_'+todayISO()+'.csv', '\ufeff'+csv, 'text/csv;charset=utf-8');
@@ -5198,23 +6764,25 @@ function openIphoneXFrameVisibilityModal(){
 
   // Tellinger for hver kategori
   const counts = {
-    urgent: state.tasks.filter(t=>t.category==='urgent' && !t.done).length,
-    today: state.tasks.filter(t=>t.todayFlag && t.category!=='urgent' && !t.done).length,
-    a: state.tasks.filter(t=>t.category==='a' && !t.todayFlag && !t.done).length,
-    b: state.tasks.filter(t=>t.category==='b' && !t.todayFlag && !t.done).length,
-    c: state.tasks.filter(t=>t.category==='c' && !t.todayFlag && !t.done).length,
-    pinned: state.tasks.filter(t=>t.pinned && !t.todayFlag && (t.category==='none' || !t.category) && !t.done).length,
-    iphone: state.tasks.filter(t=>!t.pinned && !t.todayFlag && t.iphoneFlag && (t.category==='none' || !t.category) && !t.done).length
+    urgent: state.tasks.filter(t=>t.category==='urgent' && !t.waitFlag && !t.done).length,
+    today: state.tasks.filter(t=>t.todayFlag && !t.waitFlag && t.category!=='urgent' && !t.done).length,
+    pinned: state.tasks.filter(t=>t.pinned && !t.waitFlag && !t.todayFlag && t.category!=='urgent' && !t.done).length,
+    iphone: state.tasks.filter(t=>t.iphoneFlag && !t.waitFlag && !t.pinned && !t.todayFlag && t.category!=='urgent' && !t.done).length,
+    a: state.tasks.filter(t=>t.category==='a' && !t.waitFlag && !t.todayFlag && !t.pinned && !t.iphoneFlag && !t.done).length,
+    b: state.tasks.filter(t=>t.category==='b' && !t.waitFlag && !t.todayFlag && !t.pinned && !t.iphoneFlag && !t.done).length,
+    c: state.tasks.filter(t=>t.category==='c' && !t.waitFlag && !t.todayFlag && !t.pinned && !t.iphoneFlag && !t.done).length,
+    wait: state.tasks.filter(t=>t.waitFlag && !t.done).length
   };
 
   const frames = [
     {key:'urgent', label:'Haster', color:'#E24B4A', icon:ICONS.warning},
     {key:'today', label:'I dag', color:'#00B4DB', icon:ICONS.sun},
+    {key:'pinned', label:'Pinnete', color:'#EF9F27', icon:ICONS.starFilled},
+    {key:'iphone', label:'iPhone-merkede', color:'#378ADD', icon:ICONS.phone},
     {key:'a', label:'A', color:'#EF9F27', icon:`<span class="cat-letter-badge cat-a-badge">A</span>`},
     {key:'b', label:'B', color:'#639922', icon:`<span class="cat-letter-badge cat-b-badge">B</span>`},
     {key:'c', label:'C', color:'#7F77DD', icon:`<span class="cat-letter-badge cat-c-badge">C</span>`},
-    {key:'pinned', label:'Pinnete', color:'#EF9F27', icon:ICONS.starFilled},
-    {key:'iphone', label:'iPhone-merkede', color:'#378ADD', icon:ICONS.phone}
+    {key:'wait', label:'På vent', color:'#888780', icon:ICONS.pause}
   ];
 
   const modal = document.createElement('div');
@@ -5249,7 +6817,7 @@ function openIphoneXFrameVisibilityModal(){
 
   const refreshCount = () => {
     const hiddenNow = state.iphoneXHidden || [];
-    const visible = 7 - hiddenNow.length;
+    const visible = 8 - hiddenNow.length;
     const doneBtn = modal.querySelector('#vis-done-ix');
     if(doneBtn) doneBtn.textContent = `Ferdig (${visible} valgt)`;
   };
@@ -5298,7 +6866,7 @@ function openIphoneXFrameVisibilityModal(){
   });
   modal.querySelector('[data-vis-deselect-all]').addEventListener('click',(e)=>{
     e.stopPropagation();
-    state.iphoneXHidden = ['urgent','today','a','b','c','pinned','iphone'];
+    state.iphoneXHidden = ['urgent','today','pinned','iphone','a','b','c','wait'];
     save();
     modal.remove();
     openIphoneXFrameVisibilityModal();
@@ -5471,6 +7039,286 @@ function openAlleGroupVisibilityModal(setNr){
       render();
     }
   });
+}
+
+function openNoteAttachmentPicker(anchor){
+  const existing = document.getElementById('note-attach-menu');
+  if(existing){ existing.remove(); return; }
+  const menu = document.createElement('div');
+  menu.id = 'note-attach-menu';
+  menu.className = 'group-picker-menu';
+  menu.innerHTML = `
+    <div class="group-picker-search">
+      ${ICONS.search}
+      <input type="text" class="group-picker-input" placeholder="Søk i notater..." autocomplete="off" />
+      <button class="group-picker-clear" aria-label="Tøm">${ICONS.x}</button>
+    </div>
+    <div class="group-picker-list"></div>
+    <div class="group-picker-create" data-create-new>${ICONS.plus} Opprett nytt notat fra denne oppgaven</div>
+  `;
+  document.body.appendChild(menu);
+  const rect = anchor.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.zIndex = '1000';
+  menu.style.width = Math.max(rect.width, 280) + 'px';
+  menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - parseInt(menu.style.width) - 8)) + 'px';
+  menu.style.top = '0px';
+  menu.style.visibility = 'hidden';
+
+  const input = menu.querySelector('.group-picker-input');
+  const clearBtn = menu.querySelector('.group-picker-clear');
+  const listEl = menu.querySelector('.group-picker-list');
+  const createBtn = menu.querySelector('[data-create-new]');
+
+  const renderList = (query) => {
+    const q = (query||'').toLowerCase().trim();
+    const sorted = [...state.notes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const filtered = q ? sorted.filter(n =>
+      (n.title||'').toLowerCase().includes(q) ||
+      (n.description||'').toLowerCase().includes(q) ||
+      (n.body||'').toLowerCase().includes(q)
+    ) : sorted;
+
+    if(!filtered.length){
+      listEl.innerHTML = `<div class="linked-note-empty-msg">${q ? `Ingen treff for "${escapeHtml(q)}"` : 'Ingen notater enda'}</div>`;
+      return;
+    }
+    listEl.innerHTML = filtered.slice(0, 30).map(n=>{
+      const cur = n.id === state.form.noteId;
+      return `<button type="button" class="group-picker-item ${cur?'active':''}" data-pick-note="${n.id}" style="${cur?'background:rgba(99,153,34,0.15)':''};border-left:2px solid #639922">
+        <div style="flex:1;min-width:0">
+          <div class="group-picker-name" style="font-weight:600">${escapeHtml(n.title || 'Uten tittel')}</div>
+          ${n.description ? `<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(n.description)}</div>` : ''}
+        </div>
+        ${cur ? '<span class="group-picker-check">✓</span>' : ''}
+      </button>`;
+    }).join('');
+
+    listEl.querySelectorAll('[data-pick-note]').forEach(b=>{
+      b.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        syncFormInputs();
+        state.form.noteId = b.dataset.pickNote;
+        save(); close(); render();
+        showToast('Notat tilkoblet');
+      });
+    });
+  };
+
+  const positionMenu = () => {
+    const menuHeight = menu.offsetHeight;
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const spaceAbove = rect.top - 8;
+    if(menuHeight <= spaceBelow || spaceBelow >= spaceAbove){
+      menu.style.top = (rect.bottom + 4) + 'px';
+      if(menuHeight > spaceBelow){
+        const other = menuHeight - listEl.offsetHeight;
+        listEl.style.maxHeight = Math.max(80, spaceBelow - other - 8) + 'px';
+      }
+    } else {
+      let top = rect.top - menuHeight - 4;
+      if(top < 8){
+        const other = menuHeight - listEl.offsetHeight;
+        listEl.style.maxHeight = Math.max(80, spaceAbove - other - 8) + 'px';
+        top = rect.top - menu.offsetHeight - 4;
+        if(top < 8) top = 8;
+      }
+      menu.style.top = top + 'px';
+    }
+    menu.style.visibility = '';
+  };
+
+  renderList('');
+  requestAnimationFrame(positionMenu);
+
+  input.addEventListener('input',()=>{
+    renderList(input.value);
+    clearBtn.style.visibility = input.value ? 'visible' : 'hidden';
+  });
+  clearBtn.style.visibility = 'hidden';
+  clearBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    input.value = '';
+    renderList('');
+    clearBtn.style.visibility = 'hidden';
+    input.focus();
+  });
+
+  createBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    syncFormInputs();
+    const title = (state.form.title || '').trim();
+    const newNote = {
+      id: uid('n'),
+      title: title || 'Nytt notat',
+      description: '',
+      body: state.form.notes || '',
+      date: todayISO(),
+      createdAt: new Date().toISOString()
+    };
+    state.notes.push(newNote);
+    state.form.noteId = newNote.id;
+    save(); close(); render();
+    showToast('Nytt notat opprettet');
+  });
+
+  const close = () => {
+    if(menu.parentNode) menu.parentNode.removeChild(menu);
+    document.removeEventListener('click', outsideClick, true);
+  };
+  const outsideClick = (e) => {
+    if(!menu.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) close();
+  };
+  setTimeout(()=>document.addEventListener('click', outsideClick, true), 50);
+}
+
+function openFormGroupPicker(setNr, anchor){
+  const existing = document.getElementById('form-group-picker-menu');
+  if(existing){ existing.remove(); return; }
+  const groups = setNr === 1 ? state.groups1 : state.groups2;
+  const sorted = [...groups].sort((a,b)=>a.name.localeCompare(b.name, 'nb', {sensitivity:'base'}));
+  const currentId = setNr === 1 ? state.form.group1Id : state.form.group2Id;
+
+  const menu = document.createElement('div');
+  menu.id = 'form-group-picker-menu';
+  menu.className = 'group-picker-menu';
+  menu.innerHTML = `
+    <div class="group-picker-search">
+      ${ICONS.search}
+      <input type="text" class="group-picker-input" placeholder="Søk i Gruppe ${setNr}..." autocomplete="off" />
+      <button class="group-picker-clear" aria-label="Tøm">${ICONS.x}</button>
+    </div>
+    <div class="group-picker-list"></div>
+    <div class="group-picker-count"></div>
+  `;
+  document.body.appendChild(menu);
+  const rect = anchor.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.zIndex = '1000';
+  menu.style.width = rect.width + 'px';
+  menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - rect.width - 8)) + 'px';
+  menu.style.top = '0px';
+  menu.style.visibility = 'hidden';
+
+  const input = menu.querySelector('.group-picker-input');
+  const clearBtn = menu.querySelector('.group-picker-clear');
+  const listEl = menu.querySelector('.group-picker-list');
+  const countEl = menu.querySelector('.group-picker-count');
+
+  const highlight = (name, query) => {
+    if(!query) return escapeHtml(name);
+    const idx = name.toLowerCase().indexOf(query.toLowerCase());
+    if(idx === -1) return escapeHtml(name);
+    return escapeHtml(name.slice(0,idx)) + '<mark>' + escapeHtml(name.slice(idx,idx+query.length)) + '</mark>' + escapeHtml(name.slice(idx+query.length));
+  };
+
+  const renderList = (query) => {
+    const q = (query||'').toLowerCase().trim();
+    const filtered = q ? sorted.filter(g=>(g.name||'').toLowerCase().includes(q)) : sorted;
+    let html = '';
+    if(!q){
+      const cur = !currentId;
+      html += `<button type="button" class="group-picker-item ${cur?'active':''}" data-pick=""><span class="group-picker-none">— Uten gruppe</span></button>`;
+    }
+    filtered.forEach(g=>{
+      const cur = g.id === currentId;
+      html += `<button type="button" class="group-picker-item ${cur?'active':''}" data-pick="${g.id}" style="${cur?`background:rgba(${hexToRgb(g.color)},0.15)`:''};border-left:2px solid ${g.color}">
+        <span class="group-dot" style="background:${g.color}"></span>
+        <span class="group-picker-name">${highlight(g.name, q)}</span>
+        ${cur ? '<span class="group-picker-check">✓</span>' : ''}
+      </button>`;
+    });
+    if(!filtered.length && q){
+      html += `<button type="button" class="group-picker-create" data-create-name="${escapeAttr(query.trim())}">${ICONS.plus} Opprett "${escapeHtml(query.trim())}"</button>`;
+    }
+    listEl.innerHTML = html;
+    countEl.textContent = q ? `${filtered.length} av ${sorted.length}` : `${sorted.length} grupper`;
+
+    listEl.querySelectorAll('[data-pick]').forEach(b=>{
+      b.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        const id = b.dataset.pick;
+        syncFormInputs();
+        if(setNr === 1) state.form.group1Id = id || '';
+        else state.form.group2Id = id || '';
+        save();
+        close();
+        render();
+      });
+    });
+    listEl.querySelectorAll('[data-create-name]').forEach(b=>{
+      b.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        const name = b.dataset.createName;
+        const groupSet = setNr === 1 ? state.groups1 : state.groups2;
+        const usedColors = new Set(groupSet.map(g=>g.color));
+        let color = COLORS.find(c=>!usedColors.has(c)) || COLORS[groupSet.length % COLORS.length];
+        const newGroup = { id: uid('g'), name: name, color: color, order: groupSet.length };
+        groupSet.push(newGroup);
+        syncFormInputs();
+        if(setNr === 1) state.form.group1Id = newGroup.id;
+        else state.form.group2Id = newGroup.id;
+        save();
+        close();
+        render();
+        showToast(`Opprettet "${name}"`);
+      });
+    });
+  };
+
+  const positionMenu = () => {
+    const menuHeight = menu.offsetHeight;
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const spaceAbove = rect.top - 8;
+    if(menuHeight <= spaceBelow || spaceBelow >= spaceAbove){
+      menu.style.top = (rect.bottom + 4) + 'px';
+      if(menuHeight > spaceBelow){
+        const list = menu.querySelector('.group-picker-list');
+        if(list){
+          const other = menuHeight - list.offsetHeight;
+          list.style.maxHeight = Math.max(80, spaceBelow - other - 8) + 'px';
+        }
+      }
+    } else {
+      let top = rect.top - menuHeight - 4;
+      if(top < 8){
+        const list = menu.querySelector('.group-picker-list');
+        if(list){
+          const other = menuHeight - list.offsetHeight;
+          list.style.maxHeight = Math.max(80, spaceAbove - other - 8) + 'px';
+        }
+        top = rect.top - menu.offsetHeight - 4;
+        if(top < 8) top = 8;
+      }
+      menu.style.top = top + 'px';
+    }
+    menu.style.visibility = '';
+  };
+
+  renderList('');
+  requestAnimationFrame(positionMenu);
+
+  input.addEventListener('input',()=>{
+    renderList(input.value);
+    clearBtn.style.visibility = input.value ? 'visible' : 'hidden';
+  });
+  clearBtn.style.visibility = 'hidden';
+  clearBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    input.value = '';
+    renderList('');
+    clearBtn.style.visibility = 'hidden';
+    input.focus();
+  });
+
+  const close = () => {
+    if(menu.parentNode) menu.parentNode.removeChild(menu);
+    document.removeEventListener('click', outsideClick, true);
+  };
+  const outsideClick = (e) => {
+    if(!menu.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) close();
+  };
+  setTimeout(()=>document.addEventListener('click', outsideClick, true), 50);
 }
 
 function openGroupChangePicker(taskId, setNr, anchor){
